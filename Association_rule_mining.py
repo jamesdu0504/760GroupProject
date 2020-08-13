@@ -78,6 +78,8 @@ def dataset(name):
         return import_uci_retail_mini()
     elif name == "instacart":
         return import_instacart()
+    elif name == "T40I10D100K" or name == "T10I4D100K":
+        return import_other("./Datasets/"+name+".dat.txt")
     else:
         return import_other("./Datasets/"+name+".dat")
 
@@ -100,12 +102,19 @@ Datasets that work:
 - mushroom
 - pumsb (Apriori runs out of memory with low support) (try 0.9x)
 - pumsb_star
+- T40I10D100K (Very sparse, use low support)
+- T10I4D100K (Very sparse, use low support)
+- accidents
+
+Not working:
+- Instacart
 """
+
 def main():
-    basket_sets = dataset("pumsb_star")
-    frequent_itemsets = apriori(basket_sets, min_support=0.6, use_colnames=True)
+    basket_sets = dataset("accidents")
+    frequent_itemsets = apriori(basket_sets, min_support=0.5, use_colnames=True)
     print(frequent_itemsets)
-    rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.75)
+    rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.5)
     print(rules[rules['confidence'] >= 0.2])
 
 main()
