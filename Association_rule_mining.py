@@ -2,6 +2,7 @@
 import pandas as pd
 from mlxtend.frequent_patterns import apriori
 from mlxtend.frequent_patterns import association_rules
+from mlxtend.preprocessing import TransactionEncoder
 
 # Each import function imports a dataset into the form of a matrix, each row is a transaction
 # each column is a item
@@ -48,16 +49,27 @@ def import_instacart():
     df = df.drop(['add_to_cart_order', 'reordered'], axis=1)
     df['order_id'] = df['order_id'].astype('str')
     df['product_id'] = df['product_id'].astype('str')
-    df['Quantity']=1
-    print(df.dtypes)
-    df = df.groupby(['order_id', 'product_id'])['Quantity'].sum()
-    df = df.unstack().reset_index().fillna(0).set_index('order_id')
-    print(df.head())
 
-    print("Checking input:", basket)
-    basket_sets = basket.applymap(encode_units)
+    print(df.head())
+    te = TransactionEncoder()
+    te_ary = te.fit(df).transform(df)
+    basket_sets = pd.DataFrame(te_ary, columns=te.columns_)
+    print(basket_sets.head())
     return basket_sets
 
+def import_other(filename):
+    #This reads the files that come in the format of one line per transaction
+    file_object  = open(filename, "r")
+    transactions = []
+    contents = file_object.readlines()
+    for i in range(len(contents)):
+        transactions.append(contents[i].rstrip(' \n').split(" "))
+    file_object.close()
+    te = TransactionEncoder()
+    te_ary = te.fit(transactions).transform(transactions)
+    basket_sets = pd.DataFrame(te_ary, columns=te.columns_)
+    print(basket_sets.head())
+    return basket_sets
 
 def dataset(name):
     if name == "uci_retail":
@@ -66,6 +78,8 @@ def dataset(name):
         return import_uci_retail_mini()
     elif name == "instacart":
         return import_instacart()
+    else:
+        return import_other("./Datasets/"+name+".dat")
 
 def encode_units(x):
     if x <= 0:
@@ -76,10 +90,20 @@ def encode_units(x):
 
 
 
-
+"""
+Datasets that work:
+- Belgian_retail
+- uci_retail
+- uci_retail_mini
+- chess (Apriori runs out of memory with low support) (try 0.9x)
+- connect (Apriori runs out of memory with low support) (try 0.9x)
+- mushroom
+- pumsb (Apriori runs out of memory with low support) (try 0.9x)
+- pumsb_star
+"""
 def main():
-    basket_sets = dataset("instacart")
-    frequent_itemsets = apriori(basket_sets, min_support=0.1, use_colnames=True)
+    basket_sets = dataset("pumsb_star")
+    frequent_itemsets = apriori(basket_sets, min_support=0.6, use_colnames=True)
     print(frequent_itemsets)
     rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.75)
     print(rules[rules['confidence'] >= 0.2])
