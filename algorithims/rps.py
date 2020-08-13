@@ -10,6 +10,7 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
     for item in sensitiveItemset:           
         newItemSet=set(itemset)
         newItemSet.remove(item)        #the item picked should be picked randomally to ensure robustness
+                                        #fix randomally permute the sensitive item set before this for loop
 
         noSubsets=True
         for sensitiveItemset in sortedSensitiveItemsets: #can sort cut by only considering itemsets of the correct size
