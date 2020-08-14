@@ -36,9 +36,8 @@ def rsp(model, sensitiveItemsets, supportThreshold):
     sortedClosedItemsets = sorted(model.keys(), key=lambda x: len(x))
     minSizeSensitiveItemset =len(sortedSensitiveItemsets[0])
 
-    for index, closedItemset in enumerate(sortedClosedItemsets):
-        if len(closedItemset) >= minSizeSensitiveItemset:
-            itemset = closedItemset
+    for itemset in sortedClosedItemsets:
+        if len(itemset) >= minSizeSensitiveItemset:
             support = model[itemset]
             if support >= supportThreshold:
                 for sensitiveItemset in sortedSensitiveItemsets:
