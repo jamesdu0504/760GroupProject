@@ -3,6 +3,7 @@ import pandas as pd
 from mlxtend.frequent_patterns import apriori
 from mlxtend.frequent_patterns import association_rules
 from mlxtend.preprocessing import TransactionEncoder
+from sklearn.preprocessing import MultiLabelBinarizer
 
 # Each import function imports a dataset into the form of a matrix, each row is a transaction
 # each column is a item
@@ -49,12 +50,27 @@ def import_instacart():
     df = df.drop(['add_to_cart_order', 'reordered'], axis=1)
     df['order_id'] = df['order_id'].astype('str')
     df['product_id'] = df['product_id'].astype('str')
+    grouped = df.groupby("order_id")
+    df = grouped.aggregate(lambda x: list(x))
 
-    print(df.head())
+    mlb = MultiLabelBinarizer(sparse_output=True)
+    df = df.join(pd.DataFrame.sparse.from_spmatrix(
+            mlb.fit_transform(df.pop('product_id')),
+                index=df.index, columns=mlb.classes_))
+
+    return df
+
+def import_BMS(filename):
+    #This reads the files that come in the format of one line per transaction
+    file_object  = open(filename, "r")
+    transactions = []
+    contents = file_object.readlines()
+    for i in range(len(contents)):
+        transactions.append(contents[i].rstrip(' -1 -2\n').split(" -1 "))
+    file_object.close()
     te = TransactionEncoder()
-    te_ary = te.fit(df).transform(df)
+    te_ary = te.fit(transactions).transform(transactions)
     basket_sets = pd.DataFrame(te_ary, columns=te.columns_)
-    print(basket_sets.head())
     return basket_sets
 
 def import_other(filename):
@@ -80,6 +96,8 @@ def dataset(name):
         return import_instacart()
     elif name == "T40I10D100K" or name == "T10I4D100K":
         return import_other("./Datasets/"+name+".dat.txt")
+    elif name == "BMS1_spmf" or name == "BMS2":
+        return import_BMS("./Datasets/"+name+".txt")
     else:
         return import_other("./Datasets/"+name+".dat")
 
@@ -105,16 +123,25 @@ Datasets that work:
 - T40I10D100K (Very sparse, use low support)
 - T10I4D100K (Very sparse, use low support)
 - accidents
-
-Not working:
-- Instacart
+- instacart
+- BMS1_spmf
+- BMS2
 """
 
 def main():
-    basket_sets = dataset("accidents")
-    frequent_itemsets = apriori(basket_sets, min_support=0.5, use_colnames=True)
+    min_support = 0.01      #Support threshold used
+    min_confidence = 0.05   #Confidence threshold used
+
+    basket_sets = dataset("BMS2") #Insert any of the datasets listed above here to import them
+    frequent_itemsets = apriori(basket_sets, min_support=min_support, use_colnames=True)
     print(frequent_itemsets)
-    rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.5)
-    print(rules[rules['confidence'] >= 0.2])
+    if frequent_itemsets.shape[0]>0:
+        rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=min_confidence)
+        if rules.shape[0] > 0:
+            print(rules[rules['confidence'] >= 0.0])
+        else:
+            print("Confidence too low, no rules were found")
+    else:
+        print("Support too low, no frequent item sets found")
 
 main()
