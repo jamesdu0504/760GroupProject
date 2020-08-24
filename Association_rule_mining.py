@@ -68,7 +68,6 @@ def itemsets_from_closed_itemsets(closed_itemsets, itemsets):
 Datasets that work:
 - Belgian_retail
 - uci_retail
-- uci_retail_mini
 - chess (Apriori runs out of memory with low support) (try 0.9x)
 - connect (Apriori runs out of memory with low support) (try 0.9x)
 - mushroom
@@ -78,7 +77,7 @@ Datasets that work:
 - T10I4D100K (Very sparse, use low support)
 - accidents
 - instacart
-- BMS1_spmf
+- BMS1
 - BMS2
 - toydata (The toy dataset)
 """
