@@ -165,6 +165,7 @@ def get_closed_itemsets(baskets):
 
     closed_itemset_dict = dict()
     for c, s in cl:
+        c = frozenset([int(c_i) for c_i in c])
         closed_itemset_dict[c] = s
 
     print(f'Time to find closed itemsets: {time.time() - start_time}')
@@ -177,6 +178,7 @@ def itemsets_from_closed_itemsets(closed_itemsets, itemsets):
     for itemset in itemsets:
         max_supp = 0
         for closed_itemset, supp in closed_itemsets.items():
+            closed_itemset = frozenset([str(c_i) for c_i in closed_itemset])
             if itemset <= closed_itemset:
                 max_supp = max(max_supp, supp)
         supports.append(max_supp)
