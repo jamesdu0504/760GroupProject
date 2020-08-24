@@ -17,7 +17,7 @@ datasets = ["BMS1",
             "T40I10D100K", 
             "T10I4D100K", 
             "accidents", 
-            "instacart", ]
+            "instacart"]
 
 def main(datasets):
     df = pd.DataFrame(columns=['Dataset Name',
