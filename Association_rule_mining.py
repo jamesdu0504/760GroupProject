@@ -5,6 +5,7 @@ from mlxtend.frequent_patterns import association_rules
 from mlxtend.preprocessing import TransactionEncoder
 from sklearn.preprocessing import MultiLabelBinarizer
 
+from algorithms.rps import rps
 import time
 
 # Each import function imports a dataset into the form of a matrix, each row is a transaction
@@ -133,12 +134,11 @@ Datasets that work:
 """
 
 def get_closed_itemsets(baskets):
-    print(baskets)
+    # Each itemset has minimum possible support 1/number of baskets, assuming it appears in the database
     print(f'Finding all frequent itemsets with support above: {1/baskets.shape[0]}')
     start_time = time.time()
     itemsets = fpgrowth(baskets, min_support=(1/baskets.shape[0]), use_colnames=True)
     print(f'Time to run fpgrowth with min_sup 0: {time.time() - start_time}')
-    print(itemsets.shape)
 
     su = itemsets.support.unique()
 
@@ -161,10 +161,28 @@ def get_closed_itemsets(baskets):
                     break
 
         if isclose:
-            cl.append(row['itemsets'])
+            cl.append((row['itemsets'], row['support']))
+
+    closed_itemset_dict = dict()
+    for c, s in cl:
+        closed_itemset_dict[c] = s
 
     print(f'Time to find closed itemsets: {time.time() - start_time}')
-    print(f'')
+    print(f'{itemsets.shape[0]} itemsets reduced to {len(cl)} closed itemsets')
+    return closed_itemset_dict
+
+
+def itemsets_from_closed_itemsets(closed_itemsets, itemsets):
+    supports = []
+    for itemset in itemsets:
+        max_supp = 0
+        for closed_itemset, supp in closed_itemsets.items():
+            if itemset <= closed_itemset:
+                max_supp = max(max_supp, supp)
+        supports.append(max_supp)
+
+    df = pd.DataFrame(data={'support': supports, 'itemsets': itemsets})
+    return df
 
 
 def main():
@@ -172,9 +190,31 @@ def main():
     min_confidence = 0.05   #Confidence threshold used
 
     basket_sets = dataset("toydata") #Insert any of the datasets listed above here to import them
-    frequent_itemsets = apriori(basket_sets, min_support=min_support, use_colnames=True)
 
+    # Gather all itemsets
+    itemsets = fpgrowth(basket_sets, min_support=(1/len(basket_sets)), use_colnames=True)
+
+    # Find frequent itemsets above support threshold min_support
+    frequent_itemsets = fpgrowth(basket_sets, min_support=min_support, use_colnames=True)
+
+    # Compute closed itemsets from database
+    closed_itemsets = get_closed_itemsets(basket_sets)
+
+    # Recover the original itemsets from the list of closed itemsets
+    recovered_itemsets = itemsets_from_closed_itemsets(closed_itemsets=closed_itemsets,
+                                                       itemsets=frequent_itemsets['itemsets'])
+    assert recovered_itemsets.equals(itemsets)
+
+    # Sanitize database
+    sanitized_closed_itemsets = rps(model=closed_itemsets,
+                                    sensitiveItemsets={frozenset([1,2]), frozenset([4])},
+                                    supportThreshold=0.3)
+    sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets,
+                                                       itemsets=frequent_itemsets['itemsets'])
+    print(sanitized_database)
     print(frequent_itemsets)
+
+    # print(frequent_itemsets)
     if frequent_itemsets.shape[0]>0:
         rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=min_confidence)
         if rules.shape[0] > 0:
