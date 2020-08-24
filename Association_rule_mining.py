@@ -126,13 +126,14 @@ Datasets that work:
 - instacart
 - BMS1_spmf
 - BMS2
+- toydata (The toy dataset)
 """
 
 def main():
     min_support = 0.01      #Support threshold used
     min_confidence = 0.05   #Confidence threshold used
 
-    basket_sets = dataset("BMS2") #Insert any of the datasets listed above here to import them
+    basket_sets = dataset("toydata") #Insert any of the datasets listed above here to import them
     frequent_itemsets = apriori(basket_sets, min_support=min_support, use_colnames=True)
     print(frequent_itemsets)
     if frequent_itemsets.shape[0]>0:
