@@ -134,6 +134,7 @@ Datasets that work:
 """
 
 def get_closed_itemsets(baskets):
+    print('========== Collecting Closed Itemsets ==========')
     # Each itemset has minimum possible support 1/number of baskets, assuming it appears in the database
     print(f'Finding all frequent itemsets with support above: {1/baskets.shape[0]}')
     start_time = time.time()
@@ -165,11 +166,12 @@ def get_closed_itemsets(baskets):
 
     closed_itemset_dict = dict()
     for c, s in cl:
-        c = frozenset([int(c_i) for c_i in c])
+        # c = frozenset([int(c_i) for c_i in c])
         closed_itemset_dict[c] = s
 
     print(f'Time to find closed itemsets: {time.time() - start_time}')
     print(f'{itemsets.shape[0]} itemsets reduced to {len(cl)} closed itemsets')
+    print('================================================\n')
     return closed_itemset_dict
 
 
@@ -178,7 +180,7 @@ def itemsets_from_closed_itemsets(closed_itemsets, itemsets):
     for itemset in itemsets:
         max_supp = 0
         for closed_itemset, supp in closed_itemsets.items():
-            closed_itemset = frozenset([str(c_i) for c_i in closed_itemset])
+            # closed_itemset = frozenset([str(c_i) for c_i in closed_itemset])
             if itemset <= closed_itemset:
                 max_supp = max(max_supp, supp)
         supports.append(max_supp)
@@ -191,7 +193,9 @@ def main():
     min_support = 0.01      #Support threshold used
     min_confidence = 0.05   #Confidence threshold used
 
+    print('========== Importing Dataset ==========')
     basket_sets = dataset("toydata") #Insert any of the datasets listed above here to import them
+    print('=======================================\n')
 
     # Gather all itemsets
     itemsets = fpgrowth(basket_sets, min_support=(1/len(basket_sets)), use_colnames=True)
@@ -209,12 +213,20 @@ def main():
 
     # Sanitize database
     sanitized_closed_itemsets = rps(model=closed_itemsets,
-                                    sensitiveItemsets={frozenset([1,2]), frozenset([4])},
+                                    sensitiveItemsets={frozenset(['1','2']), frozenset(['4'])},
                                     supportThreshold=0.3)
     sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets,
                                                        itemsets=frequent_itemsets['itemsets'])
+
+    print('Raw Database:')
+    print(itemsets)
+    print()
+    print('Sanitized Database:')
     print(sanitized_database)
+    print()
+    print(f'Frequent Itemsets above min_sup {min_support}:')
     print(frequent_itemsets)
+    print()
 
     # print(frequent_itemsets)
     if frequent_itemsets.shape[0]>0:
