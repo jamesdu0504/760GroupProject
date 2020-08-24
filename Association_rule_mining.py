@@ -1,9 +1,11 @@
 #Following this tutorial: https://pbpython.com/market-basket-analysis.html
 import pandas as pd
-from mlxtend.frequent_patterns import apriori
+from mlxtend.frequent_patterns import apriori, fpgrowth
 from mlxtend.frequent_patterns import association_rules
 from mlxtend.preprocessing import TransactionEncoder
 from sklearn.preprocessing import MultiLabelBinarizer
+
+import time
 
 # Each import function imports a dataset into the form of a matrix, each row is a transaction
 # each column is a item
@@ -20,6 +22,7 @@ def import_uci_retail():
     print("Checking input:", df.head())
 
     basket = (df.groupby(['InvoiceNo', 'Description'])['Quantity'].sum().unstack().reset_index().fillna(0).set_index('InvoiceNo'))
+
 
     basket_sets = basket.applymap(encode_units)
     basket_sets.drop('POSTAGE', inplace=True, axis=1)
@@ -128,12 +131,51 @@ Datasets that work:
 - BMS2
 """
 
+def get_closed_itemsets(baskets):
+    print(baskets)
+    print(f'Finding all frequent itemsets with support above: {1/baskets.shape[0]}')
+    start_time = time.time()
+    itemsets = fpgrowth(baskets, min_support=(1/baskets.shape[0]), use_colnames=True)
+    print(f'Time to run fpgrowth with min_sup 0: {time.time() - start_time}')
+    print(itemsets.shape)
+
+    su = itemsets.support.unique()
+
+    fredic = {}
+    for i in range(len(su)):
+        inset = list(itemsets.loc[itemsets.support == su[i]]['itemsets'])
+        fredic[su[i]] = inset
+
+    start_time = time.time()
+    cl = []
+    for index, row in itemsets.iterrows():
+        isclose = True
+        cli = row['itemsets']
+        cls = row['support']
+        checkset = fredic[cls]
+        for i in checkset:
+            if (cli != i):
+                if (frozenset.issubset(cli, i)):
+                    isclose = False
+                    break
+
+        if isclose:
+            cl.append(row['itemsets'])
+
+    print(f'Time to find closed itemsets: {time.time() - start_time}')
+    print(f'')
+
+
 def main():
     min_support = 0.01      #Support threshold used
     min_confidence = 0.05   #Confidence threshold used
 
-    basket_sets = dataset("BMS2") #Insert any of the datasets listed above here to import them
-    frequent_itemsets = apriori(basket_sets, min_support=min_support, use_colnames=True)
+    basket_sets = dataset("uci_retail_mini") #Insert any of the datasets listed above here to import them
+
+    closed_itemsets = get_closed_itemsets(basket_sets)
+
+    frequent_itemsets = fpgrowth(basket_sets, min_support=min_support, use_colnames=True)
+
     print(frequent_itemsets)
     if frequent_itemsets.shape[0]>0:
         rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=min_confidence)
