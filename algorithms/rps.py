@@ -1,4 +1,3 @@
-
 def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets, model):
     '''
     itemset (set)
@@ -7,14 +6,15 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
     model (dictionary) where keys are closed itemsets and values is the corresponding support
     sensitiveItemsets (set) a set of sensitive itemset
     '''
-
+    
     for item in sensitiveItemset:           
         newItemSet=set(itemset)
-        newItemSet.remove(item)        #the item picked should be picked randomally to ensure robustness
-                                        #fix randomally permute the sensitive item set before this for loop
-
+        newItemSet.remove(item)        
+                                        
         noSubsets=True
-        for sensitiveItemset in sortedSensitiveItemsets: #can sort cut by only considering itemsets of the correct size
+        for sensitiveItemset in sortedSensitiveItemsets: 
+            if len(sensitiveItemset)>len(newItemSet): #shortcut
+                break
             if sensitiveItemset.issubset(newItemSet):
                 recursiveHiding(newItemSet, support, sensitiveItemset, sortedSensitiveItemsets, model)
                 noSubsets = False
