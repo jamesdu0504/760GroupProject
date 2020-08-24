@@ -25,7 +25,7 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
 
 
 
-def rsp(model, sensitiveItemsets, supportThreshold):
+def rps(model, sensitiveItemsets, supportThreshold):
     '''
     model (dictionary) where keys are closed itemsets and values is the corresponding support
     sensitiveItemsets (set) a set of sensitive itemsets
@@ -70,4 +70,4 @@ sensitiveItemsets = {
 
 supportThreshold = 0.3
 
-print(rsp(model, sensitiveItemsets, supportThreshold))
+print(rps(model, sensitiveItemsets, supportThreshold))
