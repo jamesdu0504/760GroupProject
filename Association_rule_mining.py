@@ -129,6 +129,7 @@ Datasets that work:
 - instacart
 - BMS1_spmf
 - BMS2
+- toydata (The toy dataset)
 """
 
 def get_closed_itemsets(baskets):
@@ -170,11 +171,8 @@ def main():
     min_support = 0.01      #Support threshold used
     min_confidence = 0.05   #Confidence threshold used
 
-    basket_sets = dataset("uci_retail_mini") #Insert any of the datasets listed above here to import them
-
-    closed_itemsets = get_closed_itemsets(basket_sets)
-
-    frequent_itemsets = fpgrowth(basket_sets, min_support=min_support, use_colnames=True)
+    basket_sets = dataset("toydata") #Insert any of the datasets listed above here to import them
+    frequent_itemsets = apriori(basket_sets, min_support=min_support, use_colnames=True)
 
     print(frequent_itemsets)
     if frequent_itemsets.shape[0]>0:
