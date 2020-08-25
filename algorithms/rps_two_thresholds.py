@@ -1,3 +1,5 @@
+import random 
+
 def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets, model):
     '''
     itemset (set)
@@ -6,14 +8,15 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
     model (dictionary) where keys are closed itemsets and values is the corresponding support
     sensitiveItemsets (set) a set of sensitive itemset
     '''
-    
+    sensitiveItemset =list(sensitiveItemset)
+    random.shuffle(sensitiveItemset)        #the item picked should be picked randomally to ensure robustness
     for item in sensitiveItemset:           
         newItemSet=set(itemset)
         newItemSet.remove(item)        
                                         
         noSubsets=True
-        for sensitiveItemset in sortedSensitiveItemsets: 
-            if len(sensitiveItemset)>len(newItemSet):               #shortcut
+        for sensitiveItemset in sortedSensitiveItemsets: #can sort cut by only considering itemsets of the correct size
+            if len(sensitiveItemset)>len(newItemSet):
                 break
             if sensitiveItemset.issubset(newItemSet):
                 recursiveHiding(newItemSet, support, sensitiveItemset, sortedSensitiveItemsets, model)
@@ -25,7 +28,7 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
 
 
 
-def rps(model, sensitiveItemsets, supportThreshold):
+def rps_two_thresholds(model, sensitiveItemsets, supportThreshold1, supportThreshold2):
     '''
     model (dictionary) where keys are closed itemsets and values is the corresponding support
     sensitiveItemsets (set) a set of sensitive itemsets
@@ -39,7 +42,8 @@ def rps(model, sensitiveItemsets, supportThreshold):
     for itemset in sortedClosedItemsets:
         if len(itemset) >= minSizeSensitiveItemset:
             support = model[itemset]
-            if support >= supportThreshold:
+            randNum = random.randint(0, 1)
+            if randNum==0 and support >= supportThreshold1 or  randNum==1 and support >= supportThreshold2:
                 for sensitiveItemset in sortedSensitiveItemsets:
                     if sensitiveItemset.issubset(itemset):
                         recursiveHiding(itemset, model[itemset], sensitiveItemset, sortedSensitiveItemsets, model)
@@ -68,6 +72,7 @@ sensitiveItemsets = {
     frozenset([1, 2]),
 }
 
-supportThreshold = 0.3
+supportThreshold1 = 0.3
+supportThreshold2 = 0.2
 
-print(rps(model, sensitiveItemsets, supportThreshold))
+print(rps(model, sensitiveItemsets, supportThreshold1, supportThreshold2 ))

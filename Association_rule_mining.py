@@ -6,6 +6,7 @@ from mlxtend.frequent_patterns import association_rules
 import datasets.import_datasets as im
 
 from algorithms.rps import rps
+from algorithms.rps_two_thresholds import rps_two_thresholds
 import time
 
 def get_closed_itemsets(baskets):
@@ -50,9 +51,9 @@ def get_closed_itemsets(baskets):
     return closed_itemset_dict
 
 
-def itemsets_from_closed_itemsets(closed_itemsets, itemsets):
+def itemsets_from_closed_itemsets(closed_itemsets, possible_itemsets):
     supports = []
-    for itemset in itemsets:
+    for itemset in possible_itemsets:
         max_supp = 0
         for closed_itemset, supp in closed_itemsets.items():
             # closed_itemset = frozenset([str(c_i) for c_i in closed_itemset])
@@ -91,7 +92,7 @@ def main():
     print('=======================================\n')
 
     # Gather all itemsets
-    itemsets = fpgrowth(basket_sets, min_support=(1/len(basket_sets)), use_colnames=True)
+    power_set_of_items = fpgrowth(basket_sets, min_support=(1/len(basket_sets)), use_colnames=True)
 
     # Find frequent itemsets above support threshold min_support
     frequent_itemsets = fpgrowth(basket_sets, min_support=min_support, use_colnames=True)
@@ -101,18 +102,19 @@ def main():
 
     # Recover the original itemsets from the list of closed itemsets
     recovered_itemsets = itemsets_from_closed_itemsets(closed_itemsets=closed_itemsets,
-                                                       itemsets=frequent_itemsets['itemsets'])
-    assert recovered_itemsets.equals(itemsets)
+                                                       possible_itemsets=power_set_of_items['itemsets'])
+    
+    assert recovered_itemsets.equals(power_set_of_items)
 
     # Sanitize database
     sanitized_closed_itemsets = rps(model=closed_itemsets,
                                     sensitiveItemsets={frozenset(['1','2']), frozenset(['4'])},
                                     supportThreshold=0.3)
     sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets,
-                                                       itemsets=frequent_itemsets['itemsets'])
+                                                       possible_itemsets=power_set_of_items['itemsets'])
 
     print('Raw Database:')
-    print(itemsets)
+    print(power_set_of_items)
     print()
     print('Sanitized Database:')
     print(sanitized_database)
