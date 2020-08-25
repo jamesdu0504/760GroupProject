@@ -75,4 +75,4 @@ sensitiveItemsets = {
 supportThreshold1 = 0.3
 supportThreshold2 = 0.2
 
-print(rps(model, sensitiveItemsets, supportThreshold1, supportThreshold2 ))
+print(rps_two_thresholds(model, sensitiveItemsets, supportThreshold1, supportThreshold2 ))
