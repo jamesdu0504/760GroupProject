@@ -61,12 +61,12 @@ def itemsets_from_closed_itemsets(closed_itemsets, possible_itemsets):
                 max_supp = max(max_supp, supp)
         supports.append(max_supp)
 
-    df = pd.DataFrame(data={'support': supports, 'itemsets': itemsets})
+    df = pd.DataFrame(data={'support': supports, 'itemsets': possible_itemsets})
     return df
 
 
 """
-Datasets that work:
+datasets that work:
 - Belgian_retail
 - uci_retail
 - chess (Apriori runs out of memory with low support) (try 0.9x)

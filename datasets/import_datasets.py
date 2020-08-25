@@ -8,7 +8,7 @@ import pandas as pd
 def import_uci_retail():
     #Retail dataset provided by UC Irvine
     #Uses full dataset
-    df = pd.read_excel('./Datasets/Online Retail.xlsx')
+    df = pd.read_excel('./datasets/Online Retail.xlsx')
     df['Description'] = df['Description'].str.strip()
     df.dropna(axis=0, subset=['InvoiceNo'], inplace=True)
     df['InvoiceNo'] = df['InvoiceNo'].astype('str')
@@ -23,7 +23,7 @@ def import_uci_retail():
 
 def import_instacart():
     #Instacart retail dataset
-    df = pd.read_csv('./Datasets/order_products__train.csv')
+    df = pd.read_csv('./datasets/order_products__train.csv')
     df = df.drop(['add_to_cart_order', 'reordered'], axis=1)
     df['order_id'] = df['order_id'].astype('str')
     df['product_id'] = df['product_id'].astype('str')
@@ -67,9 +67,9 @@ def import_dataset(name):
     elif name == "instacart":
         return import_instacart()
     elif name == "T40I10D100K" or name == "T10I4D100K":
-        return import_other("./Datasets/"+name+".dat.txt")
+        return import_other("./datasets/"+name+".dat.txt")
     else:
-        return import_other("./Datasets/"+name+".dat")
+        return import_other("./datasets/"+name+".dat")
 
 def encode_units(x):
     if x <= 0:
