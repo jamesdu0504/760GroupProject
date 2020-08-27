@@ -21,11 +21,16 @@ datasets = {"mushroom": [0.1, 0.2, 0.3],
             "BMS2":[0.0005, 0.001, 0.0015]}
 
 
-def number_frequent_containing_s(frequent, s):
+def number_frequent_containing_s(frequent, sensitive):
     #Should find the number of frequent itemsets that contain a sensitive itemset
-    #@Not sure how to do this
-    #I think we loop through frequent
-    pass
+    #@Needs testing
+    count = 0
+    for _, row in frequent.iterrows():
+        for s in sensitive:
+            if s in row["itemsets"]
+                count += 1
+                break
+    return count
 
 def get_sensitive_itemsets(FI, s):
     #Should return the sensitive itemsets
