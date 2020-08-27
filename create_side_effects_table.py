@@ -31,11 +31,13 @@ def get_sensitive_itemsets(FI, s):
     #Should return the sensitive itemsets
     sensitve_itemsets = set()
 
-    #@Trying to test this
+    count = 0
     for _, row in FI.iterrows():
         if len(row["itemsets"]) > 1:
-            print(row["itemsets"])
             sensitve_itemsets.add(row["itemsets"])
+            count += 1
+        if count == s:
+            break
 
     return sensitve_itemsets
 
@@ -66,7 +68,7 @@ def main(datasets):
         #Loop through support thresholds
         for threshold_min in datasets[dataset][1:]:
             print("Finding FI")
-            #Find frequent itemsets @Does this use the correct threshold?
+            #Find frequent itemsets
             frequent_itemsets = fpgrowth(data, min_support=threshold_min, use_colnames=True)
             
             #Loop through number of sensitive itemsets
