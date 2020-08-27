@@ -51,23 +51,23 @@ def rps(model, sensitiveItemsets, supportThreshold):
 
 #example
 
-model = {frozenset([2]): 1.0,
-         frozenset([2, 3]): 0.6,
-         frozenset([2, 4]): 0.7,
-         frozenset([2, 5]): 0.9,
-         frozenset([2, 3, 4]): 0.3,
-         frozenset([2, 3, 5]): 0.5,
-         frozenset([1, 2, 5]): 0.8,
-         frozenset([1, 2, 3, 5]): 0.6,
-         frozenset([1, 2, 4, 5]): 0.6,
-         frozenset([1, 2, 3, 4, 5]): 0.2,
-         }
+# model = {frozenset([2]): 1.0,
+#          frozenset([2, 3]): 0.6,
+#          frozenset([2, 4]): 0.7,
+#          frozenset([2, 5]): 0.9,
+#          frozenset([2, 3, 4]): 0.3,
+#          frozenset([2, 3, 5]): 0.5,
+#          frozenset([1, 2, 5]): 0.8,
+#          frozenset([1, 2, 3, 5]): 0.6,
+#          frozenset([1, 2, 4, 5]): 0.6,
+#          frozenset([1, 2, 3, 4, 5]): 0.2,
+#          }
 
-sensitiveItemsets = {
-    frozenset([4]),
-    frozenset([1, 2]),
-}
+# sensitiveItemsets = {
+#     frozenset([4]),
+#     frozenset([1, 2]),
+# }
 
-supportThreshold = 0.3
+# supportThreshold = 0.3
 
-print(rps(model, sensitiveItemsets, supportThreshold))
+# print(rps(model, sensitiveItemsets, supportThreshold))

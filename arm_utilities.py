@@ -4,12 +4,12 @@ import pandas as pd
 import time
 
 
-def get_closed_itemsets(baskets):
+def get_closed_itemsets(baskets, threshold):
     print('========== Collecting Closed Itemsets ==========')
-    # Each itemset has minimum possible support 1/number of baskets, assuming it appears in the database
-    print(f'Finding all frequent itemsets with support above: {1/baskets.shape[0]}')
+    # Each itemset has minimum possible support 'threshold', assuming it appears in the database
+    print(f'Finding all frequent itemsets with support above: {threshold}')
     start_time = time.time()
-    itemsets = fpgrowth(baskets, min_support=(1/baskets.shape[0]), use_colnames=True)
+    itemsets = fpgrowth(baskets, min_support=threshold, use_colnames=True)
     print(f'Time to run fpgrowth with min_sup 0: {time.time() - start_time}')
 
     su = itemsets.support.unique()
@@ -21,6 +21,7 @@ def get_closed_itemsets(baskets):
 
     start_time = time.time()
     cl = []
+    print(itemsets.shape)
     for index, row in itemsets.iterrows():
         isclose = True
         cli = row['itemsets']
@@ -35,6 +36,7 @@ def get_closed_itemsets(baskets):
         if isclose:
             cl.append((row['itemsets'], row['support']))
 
+    print("Stage 1 done", len(cl))
     closed_itemset_dict = dict()
     for c, s in cl:
         # c = frozenset([int(c_i) for c_i in c])

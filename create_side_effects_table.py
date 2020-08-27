@@ -27,7 +27,7 @@ def number_frequent_containing_s(frequent, sensitive):
     count = 0
     for _, row in frequent.iterrows():
         for s in sensitive:
-            if s in row["itemsets"]
+            if s in row["itemsets"]:
                 count += 1
                 break
     return count
@@ -65,21 +65,22 @@ def main(datasets):
         #Load dataset
         data = im.import_dataset(dataset)
         data = data.astype('bool') #This may be needed for some datasets
-        closed_itemsets = get_closed_itemsets(data)
+        print(dataset, "imported")
+        closed_itemsets = get_closed_itemsets(data, threshold_model)
 
         # Gather all itemsets @Needs to be more efficient
         # power_set_of_items = fpgrowth(data, min_support=threshold_model, use_colnames=True)
 
         #Loop through support thresholds
         for threshold_min in datasets[dataset][1:]:
-            print("Finding FI")
+            print(dataset, "FI", threshold_min)
 
             #Find frequent itemsets @Does this use the correct threshold?
-            frequent_itemsets = fpgrowth(data, min_support=threshold_model, use_colnames=True)
+            frequent_itemsets = fpgrowth(data, min_support=threshold_min, use_colnames=True)
 
-            
             #Loop through number of sensitive itemsets
             for sens_itemsets in [10, 30, 50]:
+                print(dataset, sens_itemsets, "sensitive itemsets")
                 
                 #Get sensitive itemsets
                 sensitiveItemsets = get_sensitive_itemsets(frequent_itemsets, sens_itemsets)
@@ -90,7 +91,7 @@ def main(datasets):
                 #Find number of FI containing sensitive itemsets after sanitization
                 sanitized_closed_itemsets = rps(model=closed_itemsets,
                                     sensitiveItemsets=sensitiveItemsets,
-                                    supportThreshold=threshold_min)
+                                    supportThreshold=threshold_model)
                 sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets, possible_itemsets=frequent_itemsets['itemsets'])
 
                 #Find number of FI in sanitized database containing sensitive itemsets
@@ -107,6 +108,7 @@ def main(datasets):
                            'After PGBS S itemsets': 0
                         }
                 df = df.append(new_row, ignore_index=True)
+
     return df
 
 main(datasets).to_csv('side_effects_table.csv')
