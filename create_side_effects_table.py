@@ -68,13 +68,15 @@ def main(datasets):
         closed_itemsets = get_closed_itemsets(data)
 
         # Gather all itemsets @Needs to be more efficient
-        power_set_of_items = fpgrowth(data, min_support=(1/len(data)), use_colnames=True) 
+        # power_set_of_items = fpgrowth(data, min_support=threshold_model, use_colnames=True)
 
         #Loop through support thresholds
         for threshold_min in datasets[dataset][1:]:
             print("Finding FI")
-            #Find frequent itemsets
-            frequent_itemsets = fpgrowth(data, min_support=threshold_min, use_colnames=True)
+
+            #Find frequent itemsets @Does this use the correct threshold?
+            frequent_itemsets = fpgrowth(data, min_support=threshold_model, use_colnames=True)
+
             
             #Loop through number of sensitive itemsets
             for sens_itemsets in [10, 30, 50]:
@@ -88,8 +90,8 @@ def main(datasets):
                 #Find number of FI containing sensitive itemsets after sanitization
                 sanitized_closed_itemsets = rps(model=closed_itemsets,
                                     sensitiveItemsets=sensitiveItemsets,
-                                    supportThreshold=threshold_model)
-                sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets, possible_itemsets=power_set_of_items['itemsets'])
+                                    supportThreshold=threshold_min)
+                sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets, possible_itemsets=frequent_itemsets['itemsets'])
 
                 #Find number of FI in sanitized database containing sensitive itemsets
                 num_FI_containing_s_RPS = number_frequent_containing_s(sanitized_database, sensitiveItemsets)
