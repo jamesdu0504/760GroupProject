@@ -10,15 +10,16 @@ from algorithms.rps import rps
 """
 Needs a bit of work still
 To find parts that need work: ctrl-f @ 
+"mushroom": [0.1, 0.2, 0.3],
+            "chess":[0.7, 0.75, 0.8],
+            "connect":[ 0.8, 0.85, 0.9],
+            "BMS1":[0.00085, 0.001, 0.002],
+            "BMS2":[0.0005, 0.001, 0.0015]
+            
 """
 
 #Hard coding dictionary of datasets to test "Dataset name" : [model threshold, support thresholds...]
-datasets = {"mushroom": [0.1, 0.2, 0.3],
-            "connect":[ 0.8, 0.85, 0.9],
-            "chess":[0.7, 0.75, 0.8],
-            "Belgian_retail":[0.0005, 0.001, 0.0015],
-            "BMS1":[0.00085, 0.001, 0.002],
-            "BMS2":[0.0005, 0.001, 0.0015]}
+datasets = {"Belgian_retail":[0.0005, 0.001, 0.0015]}
 
 
 def number_frequent_containing_s(frequent, sensitive):
@@ -27,16 +28,21 @@ def number_frequent_containing_s(frequent, sensitive):
     count = 0
     for _, row in frequent.iterrows():
         for s in sensitive:
-            if s in row["itemsets"]:
+            if s.issubset(row["itemsets"]):
                 count += 1
                 break
+
     return count
 
 def get_sensitive_itemsets(FI, s):
     #Should return the sensitive itemsets
     sensitve_itemsets = set()
 
+    #Sort first
+    FI = FI.sort_values(by=['support'], ascending=False)
     count = 0
+
+    #Loop through finding s highest support sets
     for _, row in FI.iterrows():
         if len(row["itemsets"]) > 1:
             sensitve_itemsets.add(row["itemsets"])
@@ -90,8 +96,8 @@ def main(datasets):
 
                 #Find number of FI containing sensitive itemsets after sanitization
                 sanitized_closed_itemsets = rps(model=closed_itemsets,
-                                    sensitiveItemsets=sensitiveItemsets,
-                                    supportThreshold=threshold_model)
+                                                sensitiveItemsets=sensitiveItemsets,
+                                                supportThreshold=threshold_min)
                 sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets, possible_itemsets=frequent_itemsets['itemsets'])
 
                 #Find number of FI in sanitized database containing sensitive itemsets
@@ -100,13 +106,14 @@ def main(datasets):
                 #Add to row of table @Need to implement PGBS
                 new_row = {'Model': dataset,
                            'Model threshold': threshold_model,
-                           'Support Threshold': threshold_min,
-                           'Sensitive Itemsets': sens_itemsets,
+                           'Support threshold': threshold_min,
+                           'Sensitive itemsets': sens_itemsets,
                            'Before FI':len(frequent_itemsets),
                            'Before S itemsets': num_FI_containing_s,
                            'After RPS S itemsets': num_FI_containing_s_RPS,
                            'After PGBS S itemsets': 0
                         }
+                print(new_row)
                 df = df.append(new_row, ignore_index=True)
 
     return df
