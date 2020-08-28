@@ -1,5 +1,5 @@
 import pandas as pd
-from mlxtend.frequent_patterns import apriori, fpgrowth
+from mlxtend.frequent_patterns import fpgrowth
 from mlxtend.frequent_patterns import association_rules
 
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
@@ -22,33 +22,29 @@ To find parts that need work: ctrl-f @
 datasets = {"Belgian_retail":[0.0005, 0.001, 0.0015]}
 
 
-def number_frequent_containing_s(frequent, sensitive):
+def count_FI_containing_S(freqIS, sensIS):
     #Should find the number of frequent itemsets that contain a sensitive itemset
-    #@Needs testing
+    
     count = 0
-    for _, row in frequent.iterrows():
-        for s in sensitive:
+    for _, row in freqIS.iterrows():
+        for s in sensIS:
             if s.issubset(row["itemsets"]):
                 count += 1
                 break
 
     return count
 
-def get_sensitive_itemsets(FI, s):
+def get_top_k_sensitive_itemsets(freqIS, num_sensIS):
     #Should return the sensitive itemsets
     sensitive_itemsets = set()
-
+    
     #Sort first
-    FI = FI.sort_values(by=['support'], ascending=False)
-    count = 0
+    freqIS = freqIS.sort_values(by='support', ascending=False)
 
-    #Loop through finding s highest support sets
-    for _, row in FI.iterrows():
+    for _, row in freqIS.iterrows():
         if len(row["itemsets"]) >= 2:
-            print(row["support"])
             sensitive_itemsets.add(row["itemsets"])
-            count += 1
-        if count == s:
+        if len(sensitive_itemsets) == num_sensIS:
             break
     return sensitive_itemsets
 
@@ -59,69 +55,62 @@ def main(datasets):
                                'Support threshold',
                                'Model threshold',
                                'Sensitive itemsets',
-                               'Before FI',
-                               'Before S itemsets',
-                               'After RPS S itemsets',
-                               'After PGBS S itemsets'])
+                               'Number of FI before sanitization',
+                               'Number of FI containing an element of S before sanitization',
+                               'Number of FI after sanitization',
+                               'Number of FI containing an element of S after RPS',
+                               'Number of FI containing an element of S after PGBS'])
 
     #Loop through datasets
     for dataset in datasets:
-        threshold_model = datasets[dataset][0]
+        sigma_model = datasets[dataset][0]
 
         #Load dataset
         data = im.import_dataset(dataset)
         data = data.astype('bool') #This may be needed for some datasets
         print(dataset, "imported")
-        closed_itemsets, fi_model = get_closed_itemsets(data, threshold_model) #0.0005
+        current_model, freq_IS_in_model_df = get_closed_itemsets(data, sigma_model) 
 
         #Loop through support thresholds
-        for threshold_min in datasets[dataset][1:]:
-            print(dataset, "FI", threshold_min)
+        for sigma_min in datasets[dataset][1:]:
+            print(dataset, "FI", sigma_min)
+            freq_IS_above_sigma_min_df = freq_IS_in_model_df.loc[freq_IS_in_model_df["support"]> sigma_min]
 
-            #Find frequent itemsets @Threshold fi_model with threshold_min
-            frequent_itemsets = fpgrowth(data, min_support=threshold_min, use_colnames=True) #0.001, 0.0015
+            for k_freq in [10, 30, 50]:
+                print(dataset, k_freq, "sensitive itemsets")
 
-            #Loop through number of sensitive itemsets
-            for sens_itemsets in [10, 30, 50]:
-                print(dataset, sens_itemsets, "sensitive itemsets")
+                sensitive_IS = get_top_k_sensitive_itemsets(freq_IS_above_sigma_min_df, k_freq)
                 
-                ##### ALL ABOVE HERE WORKS
+                num_FI_containing_S = count_FI_containing_S(freq_IS_above_sigma_min_df, sensitive_IS)
 
+                
+                sanitized_closed_IS= rps(model=current_model,
+                                            sensitiveItemsets=sensitive_IS,
+                                            supportThreshold=sigma_min)
 
-
-                #Get sensitive itemsets
-                sensitiveItemsets = get_sensitive_itemsets(frequent_itemsets, sens_itemsets)
-
-                #Find number of FI containing sensitive itemsets
-                num_FI_containing_s = number_frequent_containing_s(frequent_itemsets, sensitiveItemsets)
-
-                #Find number of FI containing sensitive itemsets after sanitization
-                sanitized_closed_itemsets = rps(model=closed_itemsets,
-                                                sensitiveItemsets=sensitiveItemsets,
-                                                supportThreshold=threshold_min)
-                sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets, possible_itemsets=fi_model['itemsets'])
-
-
-
+                sanitized_DB = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
+                                                                    possible_itemsets=freq_IS_in_model_df['itemsets'])
                 ##### ALL BELOW HERE WORKS
 
                 #Threshold sanitized database by threshold_min to get frequent itemsets 
-                new_fi = sanitized_database.loc[sanitized_database["support"]>= threshold_min]
+                sanitized_freq_IS_sigma_min_df = sanitized_DB.loc[sanitized_DB["support"]>= sigma_min]
 
                 #Find number of FI in sanitized database containing sensitive itemsets 
-                num_FI_containing_s_RPS = number_frequent_containing_s(sanitized_database, sensitiveItemsets) 
-                print(num_FI_containing_s_RPS)
+                num_FI_containing_S_RPS = count_FI_containing_S(sanitized_DB, sensitive_IS) 
+                
 
                 #Add to row of table @Need to implement PGBS
                 new_row = {'Model': dataset,
-                           'Model threshold': threshold_model,
-                           'Support threshold': threshold_min,
-                           'Sensitive itemsets': sens_itemsets,
-                           'Before FI':len(frequent_itemsets),
-                           'Before S itemsets': num_FI_containing_s,
-                           'After RPS itemsets': len(new_fi), #Need to calculate 
-                           'After PGBS itemsets': 0
+                           'Model threshold': sigma_model,
+                           'Support threshold': sigma_min,
+                           'Sensitive itemsets': k_freq,
+                           'Number of FI before sanitization':len(freq_IS_above_sigma_min_df),
+                           'Number of FI containing an element of S before sanitization': num_FI_containing_S,
+                           'Number of FI after sanitization':len(sanitized_freq_IS_sigma_min_df), #Need to calculate 
+                           'Number of FI containing an element of S after RPS': num_FI_containing_S_RPS,
+                           'Number of FI containing an element of S after PGBS': 0
                         }
+
                 print(new_row)
                 df = df.append(new_row, ignore_index=True)
 
