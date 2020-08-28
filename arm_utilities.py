@@ -45,7 +45,7 @@ def get_closed_itemsets(baskets, threshold):
     print(f'Time to find closed itemsets: {time.time() - start_time}')
     print(f'{itemsets.shape[0]} itemsets reduced to {len(cl)} closed itemsets')
     print('================================================\n')
-    return closed_itemset_dict
+    return closed_itemset_dict, itemsets
 
 
 def itemsets_from_closed_itemsets(closed_itemsets, possible_itemsets):

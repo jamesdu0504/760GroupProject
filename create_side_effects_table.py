@@ -36,7 +36,7 @@ def number_frequent_containing_s(frequent, sensitive):
 
 def get_sensitive_itemsets(FI, s):
     #Should return the sensitive itemsets
-    sensitve_itemsets = set()
+    sensitive_itemsets = set()
 
     #Sort first
     FI = FI.sort_values(by=['support'], ascending=False)
@@ -44,13 +44,13 @@ def get_sensitive_itemsets(FI, s):
 
     #Loop through finding s highest support sets
     for _, row in FI.iterrows():
-        if len(row["itemsets"]) > 1:
-            sensitve_itemsets.add(row["itemsets"])
+        if len(row["itemsets"]) >= 2:
+            print(row["support"])
+            sensitive_itemsets.add(row["itemsets"])
             count += 1
         if count == s:
             break
-
-    return sensitve_itemsets
+    return sensitive_itemsets
 
 
 def main(datasets):
@@ -72,22 +72,23 @@ def main(datasets):
         data = im.import_dataset(dataset)
         data = data.astype('bool') #This may be needed for some datasets
         print(dataset, "imported")
-        closed_itemsets = get_closed_itemsets(data, threshold_model)
-
-        # Gather all itemsets @Needs to be more efficient
-        # power_set_of_items = fpgrowth(data, min_support=threshold_model, use_colnames=True)
+        closed_itemsets, fi_model = get_closed_itemsets(data, threshold_model) #0.0005
 
         #Loop through support thresholds
         for threshold_min in datasets[dataset][1:]:
             print(dataset, "FI", threshold_min)
 
-            #Find frequent itemsets @Does this use the correct threshold?
-            frequent_itemsets = fpgrowth(data, min_support=threshold_min, use_colnames=True)
+            #Find frequent itemsets @Threshold fi_model with threshold_min
+            frequent_itemsets = fpgrowth(data, min_support=threshold_min, use_colnames=True) #0.001, 0.0015
 
             #Loop through number of sensitive itemsets
             for sens_itemsets in [10, 30, 50]:
                 print(dataset, sens_itemsets, "sensitive itemsets")
                 
+                ##### ALL ABOVE HERE WORKS
+
+
+
                 #Get sensitive itemsets
                 sensitiveItemsets = get_sensitive_itemsets(frequent_itemsets, sens_itemsets)
 
@@ -98,10 +99,18 @@ def main(datasets):
                 sanitized_closed_itemsets = rps(model=closed_itemsets,
                                                 sensitiveItemsets=sensitiveItemsets,
                                                 supportThreshold=threshold_min)
-                sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets, possible_itemsets=frequent_itemsets['itemsets'])
+                sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets, possible_itemsets=fi_model['itemsets'])
 
-                #Find number of FI in sanitized database containing sensitive itemsets
-                num_FI_containing_s_RPS = number_frequent_containing_s(sanitized_database, sensitiveItemsets)
+
+
+                ##### ALL BELOW HERE WORKS
+
+                #Threshold sanitized database by threshold_min to get frequent itemsets 
+                new_fi = sanitized_database.loc[sanitized_database["support"]>= threshold_min]
+
+                #Find number of FI in sanitized database containing sensitive itemsets 
+                num_FI_containing_s_RPS = number_frequent_containing_s(sanitized_database, sensitiveItemsets) 
+                print(num_FI_containing_s_RPS)
 
                 #Add to row of table @Need to implement PGBS
                 new_row = {'Model': dataset,
@@ -110,8 +119,8 @@ def main(datasets):
                            'Sensitive itemsets': sens_itemsets,
                            'Before FI':len(frequent_itemsets),
                            'Before S itemsets': num_FI_containing_s,
-                           'After RPS S itemsets': num_FI_containing_s_RPS,
-                           'After PGBS S itemsets': 0
+                           'After RPS itemsets': len(new_fi), #Need to calculate 
+                           'After PGBS itemsets': 0
                         }
                 print(new_row)
                 df = df.append(new_row, ignore_index=True)
