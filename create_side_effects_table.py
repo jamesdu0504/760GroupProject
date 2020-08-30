@@ -53,7 +53,7 @@ def get_top_k_sensitive_itemsets(freqIS, num_sensIS):
 
 def main(datasets):
     #Create the base of a table
-    df = pd.DataFrame(columns=['Model',
+    table_11 = pd.DataFrame(columns=['Model',
                                'Support threshold',
                                'Model threshold',
                                'Sensitive itemsets',
@@ -63,6 +63,10 @@ def main(datasets):
                                'Number of FI containing an element of S after RPS',
                                'Number of FI containing an element of S after PGBS'])
 
+    table_10 = pd.DataFrame(columns=['Dataset',
+                                     'Model threshold',
+                                     'Number of Closed frequent itemsets',
+                                     'Number of frequent itemsets'])
     #Loop through datasets
     for dataset in datasets:
         sigma_model = datasets[dataset][0]
@@ -72,6 +76,12 @@ def main(datasets):
         data = data.astype('bool') #This may be needed for some datasets
         print(dataset, "imported")
         current_model, freq_IS_in_model_df = get_closed_itemsets(data, sigma_model) 
+
+        new_row = {'Dataset': dataset,
+                   'Model threshold': sigma_model,
+                   'Number of Closed frequent itemsets': len(current_model),
+                   'Number of frequent itemsets': len(freq_IS_in_model_df)}
+        table_10 = table_10.append(new_row, ignore_index=True)
 
         #Loop through support thresholds
         for sigma_min in datasets[dataset][1:]:
@@ -116,8 +126,9 @@ def main(datasets):
                         }
 
                 print(new_row)
-                df = df.append(new_row, ignore_index=True)
+                table_11 = table_11.append(new_row, ignore_index=True)
 
-    return df
+    table_11.to_csv('table_11.csv')
+    table_10.to_csv('table_10.csv')
 
-main(datasets).to_csv('side_effects_table.csv')
+main(datasets)
