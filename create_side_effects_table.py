@@ -109,7 +109,6 @@ def main(datasets):
                 sanitized_freq_IS_sigma_min_df = sanitized_DB.loc[sanitized_DB["support"] >= sigma_min]
 
                 #Find number of FI in sanitized database containing sensitive itemsets 
-                num_FI_containing_S_RPS = count_FI_containing_S(sanitized_DB, sensitive_IS)
                 num_FI_containing_S_RPS = count_FI_containing_S(sanitized_freq_IS_sigma_min_df, sensitive_IS)
 
 
