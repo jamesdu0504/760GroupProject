@@ -49,6 +49,8 @@ def get_top_k_sensitive_itemsets(freqIS, num_sensIS):
     return sensitive_itemsets
 
 
+# TODO: Check if they actually take 10 items or just cut the ones of unsuitable length
+
 def main(datasets):
     #Create the base of a table
     df = pd.DataFrame(columns=['Model',
@@ -89,15 +91,17 @@ def main(datasets):
                                             supportThreshold=sigma_min)
 
                 sanitized_DB = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
-                                                                    possible_itemsets=freq_IS_in_model_df['itemsets'])
+                                                             possible_itemsets=freq_IS_in_model_df['itemsets'],
+                                                             )
                 ##### ALL BELOW HERE WORKS
 
                 #Threshold sanitized database by threshold_min to get frequent itemsets 
-                sanitized_freq_IS_sigma_min_df = sanitized_DB.loc[sanitized_DB["support"]>= sigma_min]
+                sanitized_freq_IS_sigma_min_df = sanitized_DB.loc[sanitized_DB["support"] >= sigma_min]
 
                 #Find number of FI in sanitized database containing sensitive itemsets 
-                num_FI_containing_S_RPS = count_FI_containing_S(sanitized_DB, sensitive_IS) 
-                
+                num_FI_containing_S_RPS = count_FI_containing_S(sanitized_DB, sensitive_IS)
+                num_FI_containing_S_RPS = count_FI_containing_S(sanitized_freq_IS_sigma_min_df, sensitive_IS)
+
 
                 #Add to row of table @Need to implement PGBS
                 new_row = {'Model': dataset,
