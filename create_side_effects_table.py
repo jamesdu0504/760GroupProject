@@ -45,7 +45,6 @@ def get_sensitive_itemsets(FI, s):
     #Loop through finding s highest support sets
     for _, row in FI.iterrows():
         if len(row["itemsets"]) >= 2:
-            print(row["support"])
             sensitive_itemsets.add(row["itemsets"])
             count += 1
         if count == s:
@@ -55,14 +54,19 @@ def get_sensitive_itemsets(FI, s):
 
 def main(datasets):
     #Create the base of a table
-    df = pd.DataFrame(columns=['Model',
+    table_11 = pd.DataFrame(columns=['Model',
                                'Support threshold',
                                'Model threshold',
                                'Sensitive itemsets',
                                'Before FI',
                                'Before S itemsets',
-                               'After RPS S itemsets',
-                               'After PGBS S itemsets'])
+                               'After RPS itemsets',
+                               'After PGBS itemsets'])
+
+    table_10 = pd.DataFrame(columns=['Dataset',
+                                     'Model threshold',
+                                     'Number of Closed frequent itemsets',
+                                     'Number of frequent itemsets'])
 
     #Loop through datasets
     for dataset in datasets:
@@ -73,6 +77,12 @@ def main(datasets):
         data = data.astype('bool') #This may be needed for some datasets
         print(dataset, "imported")
         closed_itemsets, fi_model = get_closed_itemsets(data, threshold_model) #0.0005
+
+        new_row = {'Dataset': dataset,
+                   'Model threshold': threshold_model,
+                   'Number of Closed frequent itemsets': len(closed_itemsets),
+                   'Number of frequent itemsets': len(fi_model)}
+        table_10 = table_10.append(new_row, ignore_index=True)
 
         #Loop through support thresholds
         for threshold_min in datasets[dataset][1:]:
@@ -123,8 +133,9 @@ def main(datasets):
                            'After PGBS itemsets': 0
                         }
                 print(new_row)
-                df = df.append(new_row, ignore_index=True)
+                table_11 = table_11.append(new_row, ignore_index=True)
 
-    return df
+    table_11.to_csv('table_11.csv')
+    table_10.to_csv('table_10.csv')
 
-main(datasets).to_csv('side_effects_table.csv')
+main(datasets)
