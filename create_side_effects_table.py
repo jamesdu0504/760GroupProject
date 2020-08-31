@@ -4,6 +4,7 @@ from mlxtend.frequent_patterns import association_rules
 
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
 import datasets.import_datasets as im
+from statistical_measures import IL, IL_expected
 
 from algorithms.rps import rps
 
@@ -61,7 +62,10 @@ def main(datasets):
         data = im.import_dataset(dataset)
         data = data.astype('bool') #This may be needed for some datasets
         print(dataset, "imported")
-        current_model, freq_IS_in_model_df = get_closed_itemsets(data, sigma_model) 
+        current_model, freq_IS_in_model_df = get_closed_itemsets(data, sigma_model)
+
+        # Testing if expected information loss being calculated from closed itemsets
+
 
         new_row = {'Dataset': dataset,
                    'Model threshold': sigma_model,
@@ -82,10 +86,10 @@ def main(datasets):
                 
                 num_FI_containing_S = count_FI_containing_S(freq_IS_above_sigma_min_df, sensitive_IS)
 
-                
-                sanitized_closed_IS= rps(model=current_model,
-                                         sensitiveItemsets=sensitive_IS,
-                                         supportThreshold=sigma_min)
+                sanitized_closed_IS= rps(reference_model=current_model,
+                                            sensitiveItemsets=sensitive_IS,
+                                            supportThreshold=sigma_min)
+
 
                 sanitized_DB = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
                                                              possible_itemsets=freq_IS_in_model_df['itemsets'])
@@ -93,10 +97,16 @@ def main(datasets):
                 #Threshold sanitized database by threshold_min to get frequent itemsets 
                 sanitized_freq_IS_sigma_min_df = sanitized_DB.loc[sanitized_DB["support"] >= sigma_min]
 
-                #Find number of FI in sanitized database containing sensitive itemsets 
+
+                #Find number of FI in sanitized database containing sensitive itemsets
                 num_FI_containing_S_RPS = count_FI_containing_S(sanitized_freq_IS_sigma_min_df, sensitive_IS)
 
-                #Add to row of table
+                print(IL_expected(freq_IS_in_model_df, sigma_min))
+                print(IL(freq_IS_in_model_df, sanitized_DB))
+
+
+                #Add to row of table @Need to implement PGBS
+
                 new_row = {'Model': dataset,
                            'Model threshold': sigma_model,
                            'Support threshold': sigma_min,
