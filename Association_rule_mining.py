@@ -44,7 +44,7 @@ def main():
     frequent_itemsets = fpgrowth(basket_sets, min_support=min_support, use_colnames=True)
 
     # Compute closed itemsets from database
-    closed_itemsets = get_closed_itemsets(basket_sets)
+    closed_itemsets, _ = get_closed_itemsets(basket_sets, 1/len(basket_sets))
 
     # Recover the original itemsets from the list of closed itemsets
     recovered_itemsets = itemsets_from_closed_itemsets(closed_itemsets=closed_itemsets,
@@ -53,7 +53,7 @@ def main():
     assert recovered_itemsets.equals(power_set_of_items)
 
     # Sanitize database
-    sanitized_closed_itemsets = rps(model=closed_itemsets,
+    sanitized_closed_itemsets = rps(reference_model=closed_itemsets,
                                     sensitiveItemsets={frozenset(['1','2']), frozenset(['4'])},
                                     supportThreshold=0.3)
     sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets,

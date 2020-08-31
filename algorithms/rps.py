@@ -1,3 +1,5 @@
+import copy
+
 def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets, model):
     '''
     itemset (set)
@@ -25,13 +27,13 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
 
 
 
-def rps(model, sensitiveItemsets, supportThreshold):
+def rps(reference_model, sensitiveItemsets, supportThreshold):
     '''
     model (dictionary) where keys are closed itemsets and values is the corresponding support
     sensitiveItemsets (set) a set of sensitive itemsets
     supportThreshold (float) minimum support threshold for hiding rules
     '''
-
+    model = copy.deepcopy(reference_model)
     sortedSensitiveItemsets= sorted(sensitiveItemsets, key=lambda x: len(x))
     sortedClosedItemsets = sorted(model.keys(), key=lambda x: len(x))
     minSizeSensitiveItemset =len(sortedSensitiveItemsets[0])
