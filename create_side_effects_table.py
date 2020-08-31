@@ -48,7 +48,8 @@ def main(datasets):
                                      'Number of FI containing an element of S before sanitization',
                                      'Number of FI after sanitization',
                                      'Number of FI containing an element of S after RPS',
-                                     'Number of FI containing an element of S after PGBS'])
+                                     'Number of FI containing an element of S after PGBS',
+                                     'Errors'])
 
     table_10 = pd.DataFrame(columns=['Dataset',
                                      'Model threshold',
@@ -114,7 +115,8 @@ def main(datasets):
                            'Number of FI before sanitization':len(freq_IS_above_sigma_min_df),
                            'Number of FI containing an element of S before sanitization': num_FI_containing_S,
                            'Number of FI after sanitization':len(sanitized_freq_IS_sigma_min_df),
-                           'Number of FI containing an element of S after RPS': num_FI_containing_S_RPS}
+                           'Number of FI containing an element of S after RPS': num_FI_containing_S_RPS,
+                           'Errors': len(sanitized_freq_IS_sigma_min_df)-(len(freq_IS_above_sigma_min_df)-num_FI_containing_S)}
 
                 print(new_row)
                 table_11 = table_11.append(new_row, ignore_index=True)
