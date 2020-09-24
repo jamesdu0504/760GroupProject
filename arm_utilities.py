@@ -2,7 +2,7 @@ from mlxtend.frequent_patterns import fpgrowth
 import pandas as pd
 
 import time
-
+import cProfile
 
 def get_closed_itemsets(baskets, threshold):
     print('========== Collecting Closed Itemsets ==========')
@@ -49,6 +49,8 @@ def get_closed_itemsets(baskets, threshold):
 
 
 def itemsets_from_closed_itemsets(closed_itemsets, possible_itemsets):
+    # profile = cProfile.Profile()
+    # profile.enable()
     supports = []
     for itemset in possible_itemsets:
         max_supp = 0
@@ -59,4 +61,7 @@ def itemsets_from_closed_itemsets(closed_itemsets, possible_itemsets):
         supports.append(max_supp)
 
     df = pd.DataFrame(data={'support': supports, 'itemsets': possible_itemsets})
+
+    # profile.disable()
+    # profile.print_stats()
     return df

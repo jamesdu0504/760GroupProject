@@ -1,6 +1,9 @@
 import pandas as pd
 from mlxtend.frequent_patterns import fpgrowth
 from mlxtend.frequent_patterns import association_rules
+import time
+import copy
+import cProfile
 
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
 import datasets.import_datasets as im
@@ -9,12 +12,16 @@ from statistical_measures import IL, IL_expected
 from algorithms.rps import rps
 
 #Hard coding dictionary of datasets to test "Dataset name" : [model threshold, support thresholds...]
-datasets = {"Belgian_retail":[0.0005, 0.001, 0.0015]}
+datasets = {"mushroom":[0.1, 0.2, 0.3],
+            "connect":[ 0.8, 0.85, 0.9],
+            "chess":[0.7, 0.75, 0.8],
+            "BMS1":[0.00085, 0.001, 0.002],
+            "BMS2":[0.0005, 0.001, 0.0015],
+            "Belgian_retail":[0.0005, 0.001, 0.0015]}
 
 
 def count_FI_containing_S(freqIS, sensIS):
     #Should find the number of frequent itemsets that contain a sensitive itemset
-    
     count = 0
     for _, row in freqIS.iterrows():
         for s in sensIS:
@@ -48,13 +55,14 @@ def main(datasets):
                                      'Number of FI containing an element of S before sanitization',
                                      'Number of FI after sanitization',
                                      'Number of FI containing an element of S after RPS',
-                                     'Number of FI containing an element of S after PGBS',
-                                     'Errors'])
+                                     'Errors',
+                                     'Time'])
 
     table_10 = pd.DataFrame(columns=['Dataset',
                                      'Model threshold',
                                      'Number of Closed frequent itemsets',
-                                     'Number of frequent itemsets'])
+                                     'Number of frequent itemsets',
+                                     'Time closed itemsets'])
     #Loop through datasets
     for dataset in datasets:
         sigma_model = datasets[dataset][0]
@@ -63,15 +71,18 @@ def main(datasets):
         data = im.import_dataset(dataset)
         data = data.astype('bool') #This may be needed for some datasets
         print(dataset, "imported")
+
+        #Start total timer
+        total_time_start = time.time()
+
+        #Convert to closed itemsets
         current_model, freq_IS_in_model_df = get_closed_itemsets(data, sigma_model)
-
-        # Testing if expected information loss being calculated from closed itemsets
-
 
         new_row = {'Dataset': dataset,
                    'Model threshold': sigma_model,
                    'Number of Closed frequent itemsets': len(current_model),
-                   'Number of frequent itemsets': len(freq_IS_in_model_df)}
+                   'Number of frequent itemsets': len(freq_IS_in_model_df),
+                   'Time closed itemsets': time.time()-total_time_start}
         print(new_row)
         table_10 = table_10.append(new_row, ignore_index=True)
 
@@ -79,44 +90,53 @@ def main(datasets):
         for sigma_min in datasets[dataset][1:]:
             print(dataset, "FI", sigma_min)
             freq_IS_above_sigma_min_df = freq_IS_in_model_df.loc[freq_IS_in_model_df["support"] >= sigma_min]
-
+            
             for k_freq in [10, 30, 50]:
-                print(dataset, k_freq, "sensitive itemsets")
+                #Copy the model so we can edit it directly
+                copied_model = copy.deepcopy(current_model)
 
-                sensitive_IS = get_top_k_sensitive_itemsets(freq_IS_above_sigma_min_df, k_freq)
+                print(dataset, k_freq, "sensitive itemsets")
                 
+                #We pick sensitive itemsets here
+                sensitive_IS = get_top_k_sensitive_itemsets(freq_IS_above_sigma_min_df, k_freq)
                 num_FI_containing_S = count_FI_containing_S(freq_IS_above_sigma_min_df, sensitive_IS)
 
-                sanitized_closed_IS= rps(reference_model=current_model,
-                                            sensitiveItemsets=sensitive_IS,
-                                            supportThreshold=sigma_min)
-
-
+                #Start timer for RPS portion
+                total_time_start = time.time()
+                sanitized_closed_IS = rps(model=copied_model, 
+                                          sensitiveItemsets=sensitive_IS, 
+                                          supportThreshold=sigma_min)
+                
+                rps_time = time.time()
+                # profile = cProfile.Profile()
+                # profile.enable()
                 sanitized_DB = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
                                                              possible_itemsets=freq_IS_in_model_df['itemsets'])
+                # profile.disable()
+                # profile.print_stats()
+
+                #Calculate the end time of this iteration
+                end_time = time.time() - total_time_start
 
                 #Threshold sanitized database by threshold_min to get frequent itemsets 
                 sanitized_freq_IS_sigma_min_df = sanitized_DB.loc[sanitized_DB["support"] >= sigma_min]
-
+                print(f'RPS time: {rps_time - total_time_start}')
+                print(f'Itemsets from closed time: {end_time - rps_time}')
 
                 #Find number of FI in sanitized database containing sensitive itemsets
                 num_FI_containing_S_RPS = count_FI_containing_S(sanitized_freq_IS_sigma_min_df, sensitive_IS)
 
-                print(IL_expected(freq_IS_in_model_df, sigma_min))
-                print(IL(freq_IS_in_model_df, sanitized_DB))
-
-
-                #Add to row of table @Need to implement PGBS
-
+                #Add to row of table
                 new_row = {'Model': dataset,
                            'Model threshold': sigma_model,
                            'Support threshold': sigma_min,
                            'Sensitive itemsets': k_freq,
-                           'Number of FI before sanitization':len(freq_IS_above_sigma_min_df),
+                           'Number of FI before sanitization': len(freq_IS_above_sigma_min_df),
                            'Number of FI containing an element of S before sanitization': num_FI_containing_S,
-                           'Number of FI after sanitization':len(sanitized_freq_IS_sigma_min_df),
+                           'Number of FI after sanitization': len(sanitized_freq_IS_sigma_min_df),
                            'Number of FI containing an element of S after RPS': num_FI_containing_S_RPS,
-                           'Errors': len(sanitized_freq_IS_sigma_min_df)-(len(freq_IS_above_sigma_min_df)-num_FI_containing_S)}
+                           'Side effects': len(sanitized_freq_IS_sigma_min_df)-(len(freq_IS_above_sigma_min_df)-num_FI_containing_S),
+                           'Time': end_time}
 
                 print(new_row)
                 table_11 = table_11.append(new_row, ignore_index=True)
