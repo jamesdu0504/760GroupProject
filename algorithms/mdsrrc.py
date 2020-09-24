@@ -1,17 +1,20 @@
+import sys
+
+sys.path.append("..")
 import itertools
 import pandas as pd
 import datasets.import_datasets as im #TODO:only here for testing purposes 
-from mlxtend.frequent_patterns import association_rules, fpgrowth
+from mlxtend.frequent_patterns import fpgrowth
 
-def dsrrc(mct, mst, database, sensitive_rules):
+
+def mdsrrc(mct, mst, database, association_rules, sensitive_rules):
     """
     mct (float) minimum confidence threshold 
     mst (float) minimum support threshold 
     database (dataFrame) original transactional database
-    sensitive_rules (dataframe as per:http://rasbt.github.io/mlxtend/user_guide/frequent_patterns/association_rules/#example-1-generating-association-rules-from-frequent-itemsets) the set of sensitive rules
-    WARNING: this algorithm assumes for sensitive rules the consequent and antecedent is each one item
+    association_rules () association rules mind from the original algorithm 
     """
-
+    #TODO: check for the sake of uniform timing that association rules are generated in or outside of algorithms in the same way accross all algorithms 
     number_of_transactions=len(database.index)
     antecedents=sensitive_rules["antecedents"].tolist()
     consequents=sensitive_rules["consequents"].tolist()
@@ -87,15 +90,5 @@ def dsrrc(mct, mst, database, sensitive_rules):
 
     return database
 
-
-#toy data test case
-# database=im.import_dataset("toydata")
-# frequent_itemsets=fpgrowth(database, min_support=0.3, use_colnames=True) #must use colum names or else the code will break!!!
-# mined_association_rules=association_rules(frequent_itemsets, metric="confidence", min_threshold=0.8)
-# pd.set_option("display.max_rows", None, "display.max_columns", None)
-# print(mined_association_rules)
-# sensitive_rules=mined_association_rules[:4].copy()
-# new_database=dsrrc(0.5, 0.3, database,sensitive_rules)
-# new_frequent_itemsets=fpgrowth(new_database, min_support=0.3, use_colnames=True) #must use colum names or else the code will break!!!
-# new_mined_association_rules=association_rules(new_frequent_itemsets, metric="confidence", min_threshold=0.8)
-# print(new_mined_association_rules)
+df=im.import_dataset("toydata")
+print(df.head())

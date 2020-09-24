@@ -1,0 +1,25 @@
+INPUT: source database D, Minimum Confidence Threshold MCT, Minimum Support Threshold
+OUTPUT: sanitized database D'
+
+1. generate association rules
+2. SR = a selected set of rules with singleton antecedent and consequent i.e. x->y
+3. generate clusters (a cluster contains all rules in SR with the same consequent)
+4. calculate item sensitivity within each cluster
+5. calculate rule sensitivity within each cluster
+6. calculate the sensitivity of each cluster
+
+7. for each cluster find the sensitive transactions of that cluster
+8. sort clusters in decreasing order of sensitivity  
+9. sort transactions associated with the first cluster of (8) in decreasing order of sensitivity 
+10. for each cluster c
+11.     while an element of SR is not hidden
+12.         let t be the first transaction for cluster c
+13.         delete the common R.H.S of the transaction
+14.         if the deleted item was in the tranaction lists of other items 
+15.             deacrese transaction sensitivity 
+16.             sort the transactions
+17.         for rule in SR:
+18.             update support and confidence of the rule
+19.             if support(rule)<MST or confidence(rule)<MCT:
+20.                 remove rule from SR
+21.         let t be the next tranaction 
