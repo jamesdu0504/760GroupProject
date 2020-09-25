@@ -10,13 +10,15 @@ from algorithms.rps import rps
 
 class TestMissesCost(unittest.TestCase):
 
-    closed_itemsets = None
     power_set_of_items = None
-    recovered_itemsets = None
+    frequent_IS = None
+    non_frequent_IS = None
+    closed_IS = None
 
+    # Runs once before Class setup
     @classmethod
     def setUpClass(cls):
-        min_support = 0.01  # Support threshold used
+        min_support = 0.3  # Support threshold used
 
         # Insert any of the datasets listed above here to import them
         basket_sets = im.import_dataset("toydata")
@@ -25,25 +27,32 @@ class TestMissesCost(unittest.TestCase):
         cls.power_set_of_items = fpgrowth(basket_sets, min_support=(1 / len(basket_sets)), use_colnames=True, verbose=False)
 
         # Find frequent itemsets above support threshold min_support
-        cls.frequent_itemsets = fpgrowth(basket_sets, min_support=min_support, use_colnames=True)
+        cls.frequent_IS = fpgrowth(basket_sets, min_support=min_support, use_colnames=True)
 
-        # Compute closed itemsets from database
-        cls.closed_itemsets, _ = get_closed_itemsets(basket_sets, 1 / len(basket_sets))
+        # Find non_frequent itemsets
+        cls.non_frequent_IS = set(cls.power_set_of_items["itemsets"]).difference(set(cls.frequent_IS["itemsets"]))
 
-        # Recover the original itemsets from the list of closed itemsets
-        cls.recovered_itemsets = itemsets_from_closed_itemsets(closed_itemsets=cls.closed_itemsets,
-                                                           possible_itemsets=cls.power_set_of_items['itemsets'])
+        # Compute closed itemsets from database for use in RPS
+        cls.closed_IS, itemsets = get_closed_itemsets(basket_sets, 1 / len(basket_sets))
+
 
     def test_misses_cost_with_rps(self):
-        sanitized_closed_itemsets = rps(reference_model=self.closed_itemsets,
+
+        # Get sanitised closed itemset from RPS
+        sanitized_closed_IS = rps(reference_model=self.closed_IS,
                                         sensitiveItemsets={frozenset(['1', '2']), frozenset(['4'])},
                                         supportThreshold=0.3)
 
-        sanitized_database = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_itemsets,
-                                                           possible_itemsets=self.power_set_of_items['itemsets'])
+        # Get a sanitised database of itemsets using sanitised closed itemsets
+        sanitized_DB = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
+                                                     possible_itemsets=self.power_set_of_items['itemsets'])
+
+
+        sanitized_non_freq_IS = sanitized_DB.loc[sanitized_DB["support"] < 0.3]
 
         # Must pass non-sensitive itemsets
-        mc = misses_cost(self.frequent_itemsets, sanitized_database)
+
+        mc = misses_cost(self.non_frequent_IS, sanitized_non_freq_IS)
 
         self.assertEqual(mc, 0.0)
 
