@@ -1,8 +1,10 @@
 # Send only non-sensitive item sets
-def misses_cost(a, b):
+def misses_cost(a: set, b: set):
     """
-    Given a transactional database D and an associated sanitised database D′
+    Misses cost measures the proportion of non-sensitive itemsets hidden by the sanitisation process;
+    this indicates the number of itemsets which are consistent across the original and sanitised database.
 
+    Given a transactional database D and an associated sanitised database D′
     a is the set of non-sensitive itemsets in D
     b is set of non-sensitive itemsets in D'
     """
