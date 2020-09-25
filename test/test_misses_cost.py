@@ -11,7 +11,6 @@ from algorithms.rps import rps
 class TestMissesCost(unittest.TestCase):
 
     power_set_of_items = None
-    frequent_IS = None
     non_frequent_IS = None
     closed_IS = None
 
@@ -20,21 +19,17 @@ class TestMissesCost(unittest.TestCase):
     def setUpClass(cls):
         min_support = 0.3  # Support threshold used
 
-        # Insert any of the datasets listed above here to import them
+        # Get toy daya, WARNING! Had to change relative reference for this to work
         basket_sets = im.import_dataset("toydata")
 
         # Gather all itemsets
         cls.power_set_of_items = fpgrowth(basket_sets, min_support=(1 / len(basket_sets)), use_colnames=True, verbose=False)
 
-        # Find frequent itemsets above support threshold min_support
-        cls.frequent_IS = fpgrowth(basket_sets, min_support=min_support, use_colnames=True)
-
-        # Find non_frequent itemsets
-        cls.non_frequent_IS = set(cls.power_set_of_items["itemsets"]).difference(set(cls.frequent_IS["itemsets"]))
+        # # Find non_frequent itemsets
+        cls.non_frequent_IS = set(cls.power_set_of_items[cls.power_set_of_items["support"] < 0.3]["itemsets"])
 
         # Compute closed itemsets from database for use in RPS
         cls.closed_IS, itemsets = get_closed_itemsets(basket_sets, 1 / len(basket_sets))
-
 
     def test_misses_cost_with_rps(self):
 
@@ -47,11 +42,9 @@ class TestMissesCost(unittest.TestCase):
         sanitized_DB = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
                                                      possible_itemsets=self.power_set_of_items['itemsets'])
 
-
         sanitized_non_freq_IS = sanitized_DB.loc[sanitized_DB["support"] < 0.3]
 
         # Must pass non-sensitive itemsets
-
         mc = misses_cost(self.non_frequent_IS, sanitized_non_freq_IS)
 
         self.assertEqual(mc, 0.0)
