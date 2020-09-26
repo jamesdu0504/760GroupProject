@@ -14,7 +14,7 @@ def support_graph_distribution(frequent_itemsets, min_support, name):
     plt.title("Number of Frequent Itemsets for Varying Levels of \nSupport for the " + name + " Dataset.")
     plt.hist(frequent_itemsets['support'], 
              bins=300, 
-             density=True, 
+             density=False, 
              histtype='bar', 
              cumulative=-1, 
              range=(max(min_support, 0), frequent_itemsets['support'].max()),
