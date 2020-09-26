@@ -7,4 +7,4 @@ def artifactual_patterns(a: set, b: set):
     a is the set of itemsets in D
     b is the set of itemsets in D'
     """
-    return (len(b) - len(a.union(b))) / len(b)
+    return (len(b) - len(a.intersection(b))) / len(b)
