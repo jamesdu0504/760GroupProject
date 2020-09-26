@@ -11,12 +11,13 @@ def get_closed_itemsets_new(baskets, threshold):
         if len(row["itemsets"]) == 1:
             if row["support"] > threshold:
                 P.add(set(row["itemsets"]))
+    print("Frequent:", P)
 
     #Call recursive part
-    closed_itemsets = charm_extend(freq, P, threshold, dict())
+    closed_itemsets = charm_extended(freq, P, threshold, dict())
     return closed_itemsets, itemsets
 
-def charm_extend(freq, P, threshold):
+def charm_extended(freq, P, min_sup):
     for Xi in P:                                #For Xi x t(Xi) in P
         Pi = set()                              #Empty set,
         for Xj in P:                            #For Xj >= f Xi
@@ -24,10 +25,10 @@ def charm_extend(freq, P, threshold):
             Y = t(Xi).intersection(t(Xj))
 
             #Should be finding the support of X and comparing to the threshold
-            if freq.loc[freq['itemsets'] == X].iloc[0]["support"] >= threshold:
+            if freq.loc[freq['itemsets'] == X].iloc[0]["support"] >= min_sup:
                 if t(Xi) == t(Xj):              #Property 1
                     P.discard(Xj)               #Remove Xj from P
-                    #Replace Xi with X
+                    replaceInItems(Xi,          #Replace Xi with X
 
                 elif t(Xi).issubset(t(Xj)):     #Property 2
                     #Replace all Xi with X
@@ -40,7 +41,7 @@ def charm_extend(freq, P, threshold):
                     #Add X x Y to [Pi] using ordering f
 
         if Pi != {}:
-            C = charm_extend(freq, Pi, threshold, C)
+            C = charm_extended(freq, Pi, min_sup, C)
         del Pi
         cl.append((X, row['support']))
     return C
