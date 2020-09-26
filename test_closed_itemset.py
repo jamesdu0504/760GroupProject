@@ -29,7 +29,7 @@ def get_closed_itemsets_new(baskets, threshold):
 def charm_extended(freq, P, min_sup, C):
     for i, Xi in enumerate(P):                      #For Xi x t(Xi) in P
         Pi = []
-        for Xj in P[i+1:]:                          #For Xj >= f Xi
+        for Xj in P[i:]:                          #For Xj >= f Xi
             print(Xi)
             X = Xi[0].union(Xj[0])
             Y = Xi[1].intersection(Xj[1])           #Tidset combining these
@@ -70,7 +70,6 @@ def remove_x(P, Xj):
     return P
 
 def replaceInItems(current, target, set_a):
-    #TODO: replace occurances of current with target in set_a
     #Replace Xi with X in A
     temp = []
     for i, key in enumerate(set_a):
@@ -116,7 +115,7 @@ def add_item(freq, X, Y, Pi):
 def main():
     threshold = 0.3
     data = im.import_dataset("toydata")
-    print(get_closed_itemsets_new(data, threshold))
-    print(get_closed_itemsets(data, threshold))
+    print(get_closed_itemsets_new(data, threshold)[0])
+    print(get_closed_itemsets(data, threshold)[0])
 
 main()
