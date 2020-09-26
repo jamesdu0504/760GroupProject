@@ -71,8 +71,8 @@ datasets = {"toydata": 0.005,
             "connect": 0.8, 
             "pumsb": 0.83, 
             "pumsb_star": 0.38, 
-            "T40I10D100K": 0.001, 
-            "T10I4D100K": 0.011, 
+            "T40I10D100K": 0.011, 
+            "T10I4D100K": 0.001, 
             "accidents": 0.38, 
             "instacart": 0.005}
 
@@ -85,13 +85,13 @@ def main(dataset, min_sup):
     support_graph_distribution(frequent_itemsets, min_sup, dataset)
 
     #Example of plotting the dual distributions
-    #Plot the dual distribution by randomly reducing some values for testing
-    copy = frequent_itemsets.copy()
-    copy.dropna(inplace=True) #This is needed for some reason?
-    for i in range(copy.shape[0]//2):
-        copy.loc[random.randint(0, copy.shape[0]), ["support"]] = copy.loc[random.randint(0, copy.shape[0]-1), ["support"]]/2
+    # #Plot the dual distribution by randomly reducing some values for testing
+    # copy = frequent_itemsets.copy()
+    # copy.dropna(inplace=True) #This is needed for some reason?
+    # for i in range(copy.shape[0]//2):
+    #     copy.loc[random.randint(0, copy.shape[0]), ["support"]] = copy.loc[random.randint(0, copy.shape[0]-1), ["support"]]/2
 
-    dual_support_graph_distribution(frequent_itemsets, copy, min_sup, dataset)
+    # dual_support_graph_distribution(frequent_itemsets, copy, min_sup, dataset)
 
 for key, value in datasets.items():
     main(key, value)
