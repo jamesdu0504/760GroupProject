@@ -5,9 +5,9 @@ import pandas as pd
 import datasets.import_datasets as im
 from arm_utilities import get_closed_itemsets
 
-def get_closed_itemsets_new(baskets, threshold):
+def get_closed_itemsets_new(baskets, min_sup):
     #An implementation of the CHARM closed frequent itemsets algorithm
-    freq = fpgrowth(baskets, min_support=threshold, use_colnames=True)
+    freq = fpgrowth(baskets, min_support=min_sup, use_colnames=True)
 
     #Get a sorted list of individual frequent itemsets
     sorted_p = {}
@@ -22,65 +22,66 @@ def get_closed_itemsets_new(baskets, threshold):
         P += [[set(item), set(baskets.index[baskets[item[0]] == True].tolist())]]
 
     print(P)
-    
+    frequency = min_sup * len(baskets)
+    skip_set = []
     C = dict()
     #Call recursive part
-    closed_itemsets = charm_extended(freq, P, threshold, C)
+    closed_itemsets, _ = charm_extended(frequency, P, C, skip_set)
     return closed_itemsets, freq
 
-def charm_extended(freq, P, min_sup, C):
-    for i, Xi in enumerate(P):                      #For Xi x t(Xi) in P
-        print("\nXi", Xi)
+def charm_extended(freq, P, C, skip_set):
+    for idi in range(len(P)):
+        Xi = P[idi]
+        print("Xi:", Xi[0])
+        if Xi[0] in skip_set: 
+            continue
+        x_prev = Xi
         Pi = []
-        X = P[i][0]
-        for Xj in P[i+1:]:                          #For Xj >= f Xi
-            X = P[i][0]
-            print("\nXj", Xj)
+        for idj in range(idi+1, len(P)):
+            Xj = P[idj]
+            print("-Xi Xj:", Xi[0], Xj[0])
+            if Xj in skip_set:
+                continue
             X = Xi[0].union(Xj[0])
-            Y = Xi[1].intersection(Xj[1])           #Tidset combining these
-            print("Combined:", X, Y)
+            Y = Xi[1].intersection(Xj[1])
 
-            #Should be finding the support of X and comparing to the threshold
-            try:
-                frequency = freq.loc[freq['itemsets'] == X].iloc[0]["support"]
-            except:
-                frequency = 0
-            if frequency >= min_sup:
-                if Xi[1] == Xj[1]:                  #Property 1
+            if len(Y) >= freq:
+                if Xi[1] == Xj[1]:                      #Property 1
                     print("Property 1")
-                    P = remove_x(P, Xj)             #Remove Xj from P
-                    print("Deleting:", Xj)
-                    P = replaceInItems(Xi, X, P)    #Replace Xi with X
-                    Pi = replaceInItems(Xi, X, Pi)
-                    Xi[0] = X
+                    skip_set += [Xj]
+                    temp = [Xi[0].union(Xj[0]), Xi[1].intersection(Xj[1])]
+                    Pi = replaceInItems(Xi[0].copy(), temp[0], Pi)    #Replace works
+                    P = replaceInItems(Xi[0].copy(), temp[0], P)     #Replace Xi with X
+                    Xi = temp
 
-                elif Xi[1].issubset(Xj[1]):         #Property 2
+                elif Xi[1].issubset(Xj[1]):             #Property 2
                     print("Property 2")
-                    P = replaceInItems(Xi, X, P)    #Replace all Xi with X
-                    Pi = replaceInItems(Xi, X, Pi)
-                    print(Pi)
-                    Xi[0] = X
+                    temp = [Xi[0].union(Xj[0]), Xi[1].intersection(Xj[1])]
+                    Pi = replaceInItems(Xi[0].copy(), temp[0], Pi)      #Replace works
+                    P = replaceInItems(Xi[0].copy(), temp[0], P)       #Replace Xi with X
+                    Xi = temp
 
-                elif Xi[1].issuperset(Xj[1]):       #Property 3
+                elif Xi[1].issuperset(Xj[1]):           #Property 3
                     print("Property 3")
-                    P = remove_x(P, Xj)             #Remove Xj from P
-                    print("Deleting:", Xj)
-                    Pi = add_item(X, Y, Pi)
-                    print("Pi", Pi, X)
-
-                elif Xi[1] != Xj[1]:                #Property 4
+                    skip_set += [Xj]
+                    Pi = add_item([X, Y], Pi)   #Add works
+            
+                elif Xi[1] != Xj[1]:                    #Property 4
                     print("Property 4")
-                    Pi = add_item(X, Y, Pi)
-                    print("Pi", Pi, X)
+                    Pi = add_item([X, Y], Pi)   #Add works
 
         if Pi != []:
-            print("Recursive:", Pi)
-            C = charm_extended(freq, Pi, min_sup, C)                        #TODO: is it passing everything correctly
-        try:
-            C[frozenset(X)] = freq.loc[freq['itemsets'] == X].iloc[0]["support"]
-        except:
-            print("Index error", X)
-    return C
+            print("\nRecursive:", Pi)
+            C, skip_set = charm_extended(freq, Pi, C, skip_set)
+
+        if x_prev[0] != [] and x_prev[1] != [] and not is_subsumed(C, x_prev[1]):
+            print("Adding 1:", x_prev)
+            C[frozenset(x_prev[0])] = Y
+        if Xi[0] != [] and Xi != x_prev and Xi[1] != [] and not is_subsumed(C, Xi[1]):
+            print("Adding 2:", Xi)
+            C[frozenset(Xi[0])] = Y
+
+    return C, skip_set
 
 def remove_x(P, Xj):
     for i, x in enumerate(P):
@@ -92,25 +93,11 @@ def remove_x(P, Xj):
 
 def replaceInItems(current, target, set_a):
     #Replace Xi with X in A
-    for i, key in enumerate(set_a):
-        if current[0] == current[0].intersection(key[0]):
-            set_a[i][0] = set_a[i][0].difference(current[0])
+    for i in range(len(set_a)):
+        if current.issubset(set_a[i][0]):
+            set_a[i][0] = set_a[i][0].difference(current)
             set_a[i][0] = set_a[i][0].union(target)
     return set_a
-
-# def binary_search(l, freq):
-#     low = 0
-#     high = len(l)-1
-#     while low < high: 
-#         mid = (low+high)//2
-#         print(mid, len(l[mid][1]))
-#         if l[mid][2] > freq: 
-#             high = mid-1
-#         elif l[mid][2] < freq: 
-#             low = mid+1
-#         else: 
-#             return mid
-#     return -1
 
 def binary_search(arr, key, start, end):
    #key
@@ -128,25 +115,47 @@ def binary_search(arr, key, start, end):
    else:
       return mid
 
-def add_item(X, Y, Pi):
+def add_item(X, Pi):
     #Pi = [Frequency, Union of items, Tidset]
     #Added in sorted order to each new class
     if len(Pi) == 0:
-        Pi = [ [X, Y] ]
+        Pi = [ X ]
         return Pi
     else:
-        #j = binary_search(Pi, len(Y)) 
-        j = binary_search(Pi, len(Y), 0, len(Pi)) + 1
-        Pi = Pi[:j] + [ [X, Y] ] + Pi[j+1:] 
+        j = binary_search(Pi, len(X[1]), 0, len(Pi)) + 1
+        Pi = Pi[:j] + [ X ] + Pi[j+1:] 
         return Pi 
+
+def is_subsumed(C, Y):
+    for _, value in C.items():
+        if value == Y:
+            return True
+    return False
 
 def main():
     threshold = 0.3
     data = im.import_dataset("toydata")
     
 
-    print(get_closed_itemsets_new(data, threshold)[0])
-    print(get_closed_itemsets(data, threshold)[0])
+    CI_n = get_closed_itemsets_new(data, threshold)[0]
+    CI_o = get_closed_itemsets(data, threshold)[0]
+
+    same = []
+    have = []
+    missing = []
+    for CI in CI_o:
+        if CI in CI_n:
+            same += [CI]
+        else:
+            missing += [CI]
+
+    for CI in CI_n:
+        if not CI in CI_o:
+            have += [CI]
+    
+    print("Similar closed:", same)
+    print("Need to remove:", have)
+    print("Need to add to:", missing)
 
 main()
 
