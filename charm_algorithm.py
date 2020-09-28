@@ -21,7 +21,8 @@ def get_closed_itemsets_new(baskets, min_sup):
     skip_set = []
     C = dict()
     #Call recursive part
-    closed_itemsets, _ = charm_extended(frequency, P, C, skip_set)
+    closed_itemsets, skip_set = charm_extended(frequency, P, C, skip_set)
+    print(skip_set)
 
     length = len(baskets)
     for key in closed_itemsets.keys():
@@ -31,28 +32,27 @@ def get_closed_itemsets_new(baskets, min_sup):
 
 def charm_property(Xi, Xj, Y, min_sup, P, Pi, skip_set):
     if len(Y[1]) >= min_sup:
-        temp = [Xi[0].union(Xj[0]), Xi[1].intersection(Xj[1])]
         if Xi[1] == Xj[1]:                      #Property 1
             #print("Property 1")
-            skip_set += [Xj]
-            Pi = replaceInItems(Xi[0].copy(), temp[0], Pi)
-            P = replaceInItems(Xi[0].copy(), temp[0], P)     #Replace Xi with X
-            return temp, Pi, P, skip_set
+            skip_set += [Xj[0]]
+            Pi = replaceInItems(Xi[0].copy(), Y[0], Pi)
+            P = replaceInItems(Xi[0].copy(), Y[0], P)     #Replace Xi with X
+            return Y, Pi, P, skip_set
 
         elif Xi[1].issubset(Xj[1]):             #Property 2
             #print("Property 2")
-            Pi = replaceInItems(Xi[0].copy(), temp[0], Pi)
-            P = replaceInItems(Xi[0].copy(), temp[0], P)       #Replace Xi with X
-            return temp, Pi, P, skip_set
+            Pi = replaceInItems(Xi[0].copy(), Y[0], Pi)
+            P = replaceInItems(Xi[0].copy(), Y[0], P)       #Replace Xi with X
+            return Y, Pi, P, skip_set
 
         elif Xi[1].issuperset(Xj[1]):           #Property 3
             #print("Property 3")
-            skip_set += [Xj]
-            Pi = add_item(temp, Pi)
+            skip_set += [Xj[0]]
+            Pi = add_item(Y, Pi)
     
         elif Xi[1] != Xj[1]:                    #Property 4
             #print("Property 4")
-            Pi = add_item(temp, Pi)
+            Pi = add_item(Y, Pi)
 
     return Xi, Pi, P, skip_set
 
@@ -85,8 +85,8 @@ def charm_extended(min_sup, P, C, skip_set):
             #print("Adding 1:", x_prev)
             C[frozenset(x_prev[0])] = x_prev[1]
 
-        if X != [] and X[0] != x_prev and X[1] != [] and not is_subsumed(C, X[1]):
-            #print("Adding 2:", Xi)
+        if X != [] and X[0] != x_prev and X[1] != [] and len(X[1]) > min_sup and not is_subsumed(C, X[1]):
+            #print("Adding 2:", X)
             C[frozenset(X[0])] = X[1]
 
     return C, skip_set

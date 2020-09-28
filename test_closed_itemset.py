@@ -19,7 +19,8 @@ def main(dataset_name, threshold):
         if CI in CI_n:
             same += [CI]
         else:
-            missing += [CI]
+            if CI_o[CI] > threshold:
+                missing += [CI_o[CI]]
 
     for CI in CI_n:
         if not CI in CI_o:
@@ -29,13 +30,13 @@ def main(dataset_name, threshold):
     print("Need to remove:", len(have))
     print("Need to add to:", len(missing))
 
-
-datasets = {"BMS1":[0.00085, 0.001, 0.002],
-    "BMS2":[0.0005, 0.001, 0.0015],
-    "Belgian_retail":[0.0005, 0.001, 0.0015],
-    "mushroom":[0.1, 0.2, 0.3],
-    "connect":[ 0.8, 0.85, 0.9],
-    "chess":[0.7, 0.75, 0.8]}
+datasets = {"toydata":[0.3]}
+# datasets = {"BMS1":[0.00085, 0.001, 0.002],
+#     "BMS2":[0.0005, 0.001, 0.0015],
+#     "Belgian_retail":[0.0005, 0.001, 0.0015],
+#     "mushroom":[0.1, 0.2, 0.3],
+#     "connect":[ 0.8, 0.85, 0.9],
+#     "chess":[0.7, 0.75, 0.8]}
 
 for dataset, v in datasets.items():
     print(dataset, v[0])
