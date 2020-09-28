@@ -5,11 +5,14 @@ import pandas as pd
 import datasets.import_datasets as im
 from arm_utilities import get_closed_itemsets
 from charm_algorithm import get_closed_itemsets_new
+from charm_2 import charm
 
 def main(dataset_name, threshold):
     data = im.import_dataset(dataset_name)
 
-    CI_n = get_closed_itemsets_new(data, threshold)[0]
+    # CI_n = get_closed_itemsets_new(data, threshold)[0]
+    CI_n = charm(data, threshold)
+    print(CI_n.keys())
     CI_o = get_closed_itemsets(data, threshold)[0]
 
     same = []
@@ -37,10 +40,12 @@ datasets = {"BMS1":[0.00085, 0.001, 0.002],
     "connect":[ 0.8, 0.85, 0.9],
     "chess":[0.7, 0.75, 0.8]}
 
-for dataset, v in datasets.items():
-    print(dataset, v[0])
-    main(dataset, v[0])
+# for dataset, v in datasets.items():
+#     print(dataset, v[0])
+#     main(dataset, v[0])
 
+main('chess', 0.7)
+# main('toydata', 0.0001)
 
 """
 Should have:

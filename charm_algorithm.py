@@ -1,6 +1,7 @@
 from mlxtend.frequent_patterns import fpgrowth
 import pandas as pd
 
+
 def get_closed_itemsets_new(baskets, min_sup):
     #An implementation of the CHARM closed frequent itemsets algorithm
     freq = fpgrowth(baskets, min_support=min_sup, use_colnames=True)
@@ -49,7 +50,7 @@ def charm_property(Xi, Xj, Y, min_sup, P, Pi, skip_set):
             #print("Property 3")
             skip_set += [Xj]
             Pi = add_item(temp, Pi)
-    
+
         elif Xi[1] != Xj[1]:                    #Property 4
             #print("Property 4")
             Pi = add_item(temp, Pi)
@@ -65,7 +66,7 @@ def charm_extended(min_sup, P, C, skip_set):
 
     for idi in range(len(P)):
         Xi = P[idi]
-        if Xi[0] in skip_set: 
+        if Xi[0] in skip_set:
             continue
         x_prev = Xi
         X = []
@@ -127,6 +128,7 @@ def binary_search(arr, key, start, end):
    else:
       return mid
 
+
 def add_item(X, Pi):
     #Pi = [Frequency, Union of items, Tidset]
     #Added in sorted order to each new class
@@ -135,9 +137,9 @@ def add_item(X, Pi):
         return Pi
     else:
         j = binary_search(Pi, len(X[1]), 0, len(Pi)) + 1
-        Pi = Pi[:j] + [ X ] + Pi[j+1:] 
-        return Pi 
-
+        Pi = Pi[:j] + [ X ] + Pi[j+1:]
+        return Pi
+#
 def is_subsumed(C, Y):
     for _, value in C.items():
         if value == Y:
