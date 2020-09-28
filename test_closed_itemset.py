@@ -25,9 +25,9 @@ def main(dataset_name, threshold):
         if not CI in CI_o:
             have += [CI]
     
-    #print("Similar closed:", same)
-    print("\nNeed to remove:", have)
-    print("\nNeed to add to:", missing)
+    print("Similar closed:", len(same))
+    print("Need to remove:", len(have))
+    print("Need to add to:", len(missing))
 
 
 datasets = {"BMS1":[0.00085, 0.001, 0.002],
