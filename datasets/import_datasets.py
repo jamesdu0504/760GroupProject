@@ -50,7 +50,7 @@ def import_BMS(filename):
 
 def import_other(filename):
     #This reads the files that come in the format of one line per transaction
-    file_object  = open(filename, "r")
+    file_object = open(filename, "r")
     transactions = []
     contents = file_object.readlines()
     for i in range(len(contents)):
@@ -67,9 +67,9 @@ def import_dataset(name):
     elif name == "instacart":
         return import_instacart()
     elif name == "T40I10D100K" or name == "T10I4D100K":
-        return import_other("./datasets/"+name+".dat.txt")
+        return import_other("../datasets/"+name+".dat.txt")
     else:
-        return import_other("./datasets/"+name+".dat")
+        return import_other("../datasets/"+name+".dat")
 
 def encode_units(x):
     if x <= 0:
