@@ -1,5 +1,8 @@
 import unittest
 
+import sys
+sys.path.insert(1, '../')
+
 from mlxtend.frequent_patterns import fpgrowth
 from metrics.side_effects_factor import side_effects_factor
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
@@ -51,6 +54,7 @@ class TestSideEffectsFactor(unittest.TestCase):
         c = set(self.original_IS["itemsets"]).intersection(set(sensitive_IS))
 
         sef = side_effects_factor(a, b, c)
+        print(len(a), len(b), len(c))
         self.assertEqual(0.0, sef)
 
 

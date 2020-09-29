@@ -1,5 +1,8 @@
 import unittest
 
+import sys
+sys.path.insert(1, '../')
+
 from mlxtend.frequent_patterns import fpgrowth
 from metrics.misses_cost import misses_cost
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
@@ -14,7 +17,7 @@ def remove_sensitive_subsets(original, sensitive):
             if s.issubset(row["itemsets"]):
                 row_mask += [i]
                 break
-    return original[~original["itemsets"].isin(row_mask)]
+    return original.loc[set(original.index) - set(row_mask)]
 
 
 class TestMissesCost(unittest.TestCase):
@@ -61,10 +64,10 @@ class TestMissesCost(unittest.TestCase):
                                                        possible_itemsets=self.original_IS['itemsets'])
 
         # Find set of non-sensitive frequent itemsets in D
-        a = remove_sensitive_subsets(self.original_IS, sensitive_IS)
+        a = remove_sensitive_subsets(self.original_Freq_IS, sensitive_IS)
 
         # Find set of non-sensitive frequent itemsets in D'
-        b = remove_sensitive_subsets(sanitised_F_IS, sensitive_IS)
+        b = remove_sensitive_subsets(sanitised_F_IS[sanitised_F_IS["support"] >= self.sigma_min], sensitive_IS)
 
         mc = misses_cost(a, b)
         self.assertEqual(mc, 0.0)

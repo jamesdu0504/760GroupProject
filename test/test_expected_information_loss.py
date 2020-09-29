@@ -14,7 +14,7 @@ def remove_sensitive_subsets(original, sensitive):
             if s.issubset(row["itemsets"]):
                 row_mask += [i]
                 break
-    return original[~original["itemsets"].isin(row_mask)]
+    return original.loc[set(original.index) - set(row_mask)]
 
 
 class TestExpectedInformationLoss(unittest.TestCase):

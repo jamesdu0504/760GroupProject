@@ -1,5 +1,8 @@
 import unittest
 
+import sys
+sys.path.insert(1, '../')
+
 from mlxtend.frequent_patterns import fpgrowth
 from metrics.information_loss import information_loss
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
@@ -14,7 +17,7 @@ def remove_sensitive_subsets(original, sensitive):
             if s.issubset(row["itemsets"]):
                 row_mask += [i]
                 break
-    return original[~original["itemsets"].isin(row_mask)]
+    return original.loc[set(original.index) - set(row_mask)]
 
 
 class TestMissesCost(unittest.TestCase):

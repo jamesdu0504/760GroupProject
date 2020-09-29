@@ -1,5 +1,8 @@
 import unittest
 
+import sys
+sys.path.insert(1, '../')
+
 from mlxtend.frequent_patterns import fpgrowth
 from metrics.hiding_failure import hiding_failure
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
