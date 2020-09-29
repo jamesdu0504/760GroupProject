@@ -59,24 +59,26 @@ def dual_support_graph_distribution(frequent_itemsets_A, frequent_itemsets_B, mi
     plt.savefig("supports/"+name+"_dual.png")
     plt.close()
 
-
-#Manually assigning minimum supports
-datasets = {"toydata": 0.005,
-            "BMS1": 0.00085, 
-            "BMS2": 0.0005, 
-            "uci_retail": 0.005,
-            "mushroom": 0.1,
-            "Belgian_retail": 0.0005,
-            "chess": 0.7, 
-            "connect": 0.8, 
-            "pumsb": 0.83, 
-            "pumsb_star": 0.38, 
-            "T40I10D100K": 0.011, 
-            "T10I4D100K": 0.001, 
-            "accidents": 0.38, 
-            "instacart": 0.005}
-
 def main(dataset, min_sup):
+    #Manually assigning minimum supports
+    datasets = {"toydata": 0.005,
+                "BMS1": 0.00085, 
+                "BMS2": 0.0005, 
+                "uci_retail": 0.005,
+                "mushroom": 0.1,
+                "Belgian_retail": 0.0005,
+                "chess": 0.7, 
+                "connect": 0.8, 
+                "pumsb": 0.83, 
+                "pumsb_star": 0.38, 
+                "T40I10D100K": 0.011, 
+                "T10I4D100K": 0.001, 
+                "accidents": 0.38, 
+                "instacart": 0.005}
+
+    for key, value in datasets.items():
+        main(key, value)
+
     print("Processing:", dataset)
     basket_sets = im.import_dataset(dataset)
     
@@ -93,5 +95,3 @@ def main(dataset, min_sup):
 
     # dual_support_graph_distribution(frequent_itemsets, copy, min_sup, dataset)
 
-for key, value in datasets.items():
-    main(key, value)

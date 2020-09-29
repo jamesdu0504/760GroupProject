@@ -55,7 +55,7 @@ class TestMissesCost(unittest.TestCase):
         sensitive_IS = {frozenset(['1', '2']), frozenset(['4'])}
 
         # Produce a sanitised DB with sensitive IS's support below sigma_min
-        sanitized_closed_IS = rps(reference_model=self.original_Closed_IS,
+        sanitized_closed_IS = rps(model=self.original_Closed_IS,
                                   sensitiveItemsets=sensitive_IS,
                                   supportThreshold=self.sigma_min)
 
