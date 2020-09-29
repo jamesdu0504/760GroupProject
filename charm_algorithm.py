@@ -1,7 +1,7 @@
 from mlxtend.frequent_patterns import fpgrowth
 import pandas as pd
 
-def get_closed_itemsets_new(baskets, min_sup):
+def get_closed_itemsets_Charm(baskets, min_sup):
     #An implementation of the CHARM closed frequent itemsets algorithm
     freq = fpgrowth(baskets, min_support=min_sup, use_colnames=True)
 
@@ -22,7 +22,6 @@ def get_closed_itemsets_new(baskets, min_sup):
     C = dict()
     #Call recursive part
     closed_itemsets, skip_set = charm_extended(frequency, P, C, skip_set)
-    print(skip_set)
 
     length = len(baskets)
     for key in closed_itemsets.keys():
@@ -135,7 +134,7 @@ def add_item(X, Pi):
         return Pi
     else:
         j = binary_search(Pi, len(X[1]), 0, len(Pi)) + 1
-        Pi = Pi[:j] + [ X ] + Pi[j+1:] 
+        Pi = Pi[:j] + [ X ] + Pi[j:] 
         return Pi 
 
 def is_subsumed(C, Y):
