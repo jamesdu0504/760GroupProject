@@ -69,8 +69,6 @@ class TestMissesCost(unittest.TestCase):
         # Find set of non-sensitive frequent itemsets in D'
         b = remove_sensitive_subsets(sanitised_F_IS, sensitive_IS)
 
-        self.assertEqual(len(sanitised_F_IS["itemsets"]), len(b), "Sensitive Itemsets were removed from the sanitised frequest itemsets")
-
         mc = misses_cost(a, b)
         self.assertEqual(mc, 0.0)
 
