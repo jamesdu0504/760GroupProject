@@ -41,14 +41,23 @@ class TestHidingFailure(unittest.TestCase):
         sanitised_F_IS = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
                                                        possible_itemsets=self.original_IS['itemsets'])
 
-        # Find sensitive itemsets in original database
-        a = set(self.original_IS["itemsets"]).intersection(set(sensitive_IS))
+        # Old working to look back on
+        # # Find sensitive itemsets in original database
+        # a = set(self.original_IS["itemsets"]).intersection(set(sensitive_IS))
+        #
+        # # Find sensitive itemsets in sanitised database
+        # b = set(sanitised_F_IS["itemsets"]).intersection(set(sensitive_IS))
 
-        # Find sensitive itemsets in sanitised database
-        b = set(sanitised_F_IS["itemsets"]).intersection(set(sensitive_IS))
+        # Find set of frequent itemsets in D
+        temp = self.original_IS.loc[self.original_IS["support"] > self.sigma_min, "itemsets"]
+        a = set(temp).intersection(set(sensitive_IS))
+
+        # Find set of frequent itemsets in D'
+        temp = sanitised_F_IS.loc[sanitised_F_IS["support"] > self.sigma_min, "itemsets"]
+        b = set(temp).intersection(set(sensitive_IS))
 
         hf = hiding_failure(a, b)
-        self.assertEqual(hf, 1.0)
+        self.assertEqual(0.0, hf)
 
 if __name__ == '__main__':
     unittest.main()
