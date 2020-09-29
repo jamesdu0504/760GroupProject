@@ -9,17 +9,6 @@ from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
 import datasets.import_datasets as im
 from algorithms.rps import rps
 
-
-def remove_sensitive_subsets(original, sensitive):
-    row_mask = []
-    for i, row in original.iterrows():
-        for s in sensitive:
-            if s.issubset(row["itemsets"]):
-                row_mask += [i]
-                break
-    return original.loc[set(original.index) - set(row_mask)]
-
-
 class TestMissesCost(unittest.TestCase):
 
     original_IS = None
@@ -64,13 +53,13 @@ class TestMissesCost(unittest.TestCase):
                                                        possible_itemsets=self.original_IS['itemsets'])
 
         # Give all itemsets and supports in D
-        a = self.original_IS
+        a = self.original_Freq_IS           #We want frequent itemsets only
 
         # Give all itemsets and supports in D'
         b = sanitised_F_IS
 
         il = information_loss(a, b)
-        self.assertEqual(0.0, il)
+        self.assertEqual(0.3377, round(il,4)) #Using expected IL found in excel
 
 
 if __name__ == '__main__':

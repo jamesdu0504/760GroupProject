@@ -1,5 +1,8 @@
 import unittest
 
+import sys
+sys.path.insert(1, '../')
+
 from mlxtend.frequent_patterns import fpgrowth
 from metrics.expected_information_loss import expected_information_loss
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
@@ -7,14 +10,14 @@ import datasets.import_datasets as im
 from algorithms.rps import rps
 
 
-def remove_sensitive_subsets(original, sensitive):
+def get_sensitive_subsets(original, sensitive):
     row_mask = []
     for i, row in original.iterrows():
         for s in sensitive:
             if s.issubset(row["itemsets"]):
                 row_mask += [i]
                 break
-    return original.loc[set(original.index) - set(row_mask)]
+    return original.loc[set(row_mask)]
 
 
 class TestExpectedInformationLoss(unittest.TestCase):
@@ -48,19 +51,15 @@ class TestExpectedInformationLoss(unittest.TestCase):
 
     def test_expected_information_loss_with_rps(self):
 
-        # Sensitive closed itemsets whose support needs to be reduced
         sensitive_IS = {frozenset(['1', '2']), frozenset(['4'])}
 
-        # Produce a sanitised DB with sensitive IS's support below sigma_min
-        sanitized_closed_IS = rps(reference_model=self.original_Closed_IS,
-                                  sensitiveItemsets=sensitive_IS,
-                                  supportThreshold=self.sigma_min)
-
         # Give all itemsets and supports in D
-        a = self.original_IS
+        a = self.original_Freq_IS
 
-        eil = expected_information_loss(a, self.sigma_min)
-        self.assertEqual(0.0, eil)
+        b = get_sensitive_subsets(self.original_Freq_IS, sensitive_IS)
+
+        eil = expected_information_loss(a, b, self.sigma_min)
+        self.assertEqual(0.7273, round(eil,4))
 
 
 if __name__ == '__main__':

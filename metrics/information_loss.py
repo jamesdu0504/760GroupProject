@@ -9,6 +9,7 @@ def information_loss(a, b):
     b is the frequent itemset dataframe of D'
     """
     merged = pd.merge(a, b, how="outer", on=["itemsets"])
+    merged = merged[merged['support_x'].notna()]
 
     # If one has itemsets that the other doesn't, its support is 0
     merged = merged.fillna(0)

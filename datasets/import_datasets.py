@@ -67,7 +67,7 @@ def import_dataset(name):
     elif name == "instacart":
         return import_instacart()
     elif name == "T40I10D100K" or name == "T10I4D100K":
-        return import_other("./datasets/"+name+".dat.txt")
+        return import_other("../datasets/"+name+".dat.txt")
     else:
         return import_other("../datasets/"+name+".dat")
 
