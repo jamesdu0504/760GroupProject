@@ -1,6 +1,7 @@
 #from arm_utilities import get_closed_itemsets
 from mlxtend.frequent_patterns import fpgrowth
 import pandas as pd
+import time
 
 import datasets.import_datasets as im
 from arm_utilities import get_closed_itemsets
@@ -10,10 +11,16 @@ from charm_2 import charm
 def main(dataset_name, threshold):
     data = im.import_dataset(dataset_name)
 
-    # CI_n = get_closed_itemsets_new(data, threshold)[0]
+    start = time.time()
     CI_n = charm(data, threshold)
-    print(CI_n.keys())
+    # print(CI_n)
+    print(f'Time taken to run CHARM: {time.time() - start}')
+    start = time.time()
     CI_o = get_closed_itemsets(data, threshold)[0]
+    print(f'Time taken to run old code: {time.time() - start}')
+
+
+
 
     same = []
     have = []
@@ -27,7 +34,7 @@ def main(dataset_name, threshold):
     for CI in CI_n:
         if not CI in CI_o:
             have += [CI]
-    
+
     print("Similar closed:", len(same))
     print("Need to remove:", len(have))
     print("Need to add to:", len(missing))
