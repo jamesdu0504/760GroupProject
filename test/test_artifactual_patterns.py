@@ -31,6 +31,9 @@ class TestArtifactualPatterns(unittest.TestCase):
         # Compute closed itemsets of original data base
         cls.original_Closed_IS, _ = get_closed_itemsets(basket_sets, sigma_model)
 
+        # Get frequent itemsets
+        cls.original_Freq_IS = cls.original_IS[cls.original_IS["support"] >= cls.sigma_min]
+
     def test_artifactual_patterns_with_rps(self):
 
         # Sensitive closed itemsets whose support needs to be reduced
@@ -46,10 +49,10 @@ class TestArtifactualPatterns(unittest.TestCase):
                                                        possible_itemsets=self.original_IS['itemsets'])
 
         # All itemsets in original database
-        a = set(self.original_IS["itemsets"])
+        a = set(self.original_Freq_IS["itemsets"])
 
         # All itemsets in sanitised database
-        b = set(sanitised_F_IS["itemsets"])
+        b = set(sanitised_F_IS[sanitised_F_IS["support"] >= self.sigma_min]["itemsets"])
 
         af = artifactual_patterns(a, b)
 

@@ -9,6 +9,16 @@ from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
 import datasets.import_datasets as im
 from algorithms.rps import rps
 
+def get_sensitive_subsets(original, sensitive):
+    row_mask = []
+    for i, row in original.iterrows():
+        for s in sensitive:
+            if s.issubset(row["itemsets"]):
+                row_mask += [i]
+                break
+    return original.loc[set(row_mask)]
+
+
 class TestHidingFailure(unittest.TestCase):
 
     original_IS = None
@@ -52,12 +62,10 @@ class TestHidingFailure(unittest.TestCase):
         # b = set(sanitised_F_IS["itemsets"]).intersection(set(sensitive_IS))
 
         # Find set of frequent itemsets in D
-        temp = self.original_IS.loc[self.original_IS["support"] > self.sigma_min, "itemsets"]
-        a = set(temp).intersection(set(sensitive_IS))
+        a = get_sensitive_subsets(self.original_IS.loc[self.original_IS["support"] > self.sigma_min], sensitive_IS)["itemsets"]
 
         # Find set of frequent itemsets in D'
-        temp = sanitised_F_IS.loc[sanitised_F_IS["support"] > self.sigma_min, "itemsets"]
-        b = set(temp).intersection(set(sensitive_IS))
+        b = get_sensitive_subsets(sanitised_F_IS.loc[sanitised_F_IS["support"] > self.sigma_min], sensitive_IS)["itemsets"]
 
         hf = hiding_failure(a, b)
         self.assertEqual(0.0, hf)
