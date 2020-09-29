@@ -9,4 +9,4 @@ def hiding_failure(a, b):
     a is the set of sensitive itemsets in D
     b is set of sensitive itemsets in D'
     """
-    return len(a) / len(b)
+    return len(b) / len(a)
