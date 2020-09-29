@@ -9,35 +9,45 @@ from algorithms.rps import rps
 
 class TestArtifactualPatterns(unittest.TestCase):
 
-    min_support = 0.3
-    original_DB = None
-    basket_sets = None
+    original_IS = None
+    original_Closed_IS = None
+
+    # Want to hide the sensitive itemsets below this threshold
+    sigma_min = 0.3
 
     @classmethod
     def setUpClass(cls):
 
         # Get toy data, WARNING! Had to change relative reference for this to work
-        cls.basket_sets = im.import_dataset("toydata")
+        basket_sets = im.import_dataset("toydata")
 
-        # Gather all itemsets from the original database by setting minimum support possible
-        cls.original_DB = fpgrowth(cls.basket_sets, min_support=(1 / len(cls.basket_sets)), use_colnames=True,
-                                   verbose=False)
+        # Abuse FPGrowth using absolute smallest min support to get all itemsets as frequent itemsets
+        sigma_model = 1 / len(basket_sets)
+        cls.original_IS = fpgrowth(basket_sets, min_support=sigma_model, use_colnames=True, verbose=False)
+
+        # Compute closed itemsets of original data base
+        cls.original_Closed_IS, _ = get_closed_itemsets(basket_sets, sigma_model)
 
     def test_artifactual_patterns_with_rps(self):
-        # Compute closed itemsets of original DB
-        closed_IS, itemsets = get_closed_itemsets(self.basket_sets, 1 / len(self.basket_sets))
 
-        # Get sanitised closed itemset from RPS
-        sanitized_closed_IS = rps(reference_model=closed_IS,
-                                  sensitiveItemsets={frozenset(['1', '2']), frozenset(['4'])},
-                                  supportThreshold=self.min_support)
+        # Sensitive closed itemsets whose support needs to be reduced
+        sensitive_IS = {frozenset(['1', '2']), frozenset(['4'])}
 
-        # Get a sanitised database of itemsets using sanitised closed itemsets
-        sanitised_DB = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
-                                                     possible_itemsets=self.original_DB['itemsets'])
+        # Produce a sanitised DB with sensitive IS's support below sigma_min
+        sanitized_closed_IS = rps(reference_model=self.original_Closed_IS,
+                                  sensitiveItemsets=sensitive_IS,
+                                  supportThreshold=self.sigma_min)
 
-        a = set(self.original_DB['itemsets'])
-        b = set(sanitised_DB["itemsets"])
+        # Convert from closed to frequent itemsets
+        sanitised_F_IS = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
+                                                       possible_itemsets=self.original_IS['itemsets'])
+
+        # All itemsets in original database
+        a = set(self.original_IS["itemsets"])
+
+        # All itemsets in sanitised database
+        b = set(sanitised_F_IS["itemsets"])
+
         af = artifactual_patterns(a, b)
 
         self.assertEqual(af, 0.0)
