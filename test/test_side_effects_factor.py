@@ -41,13 +41,13 @@ class TestSideEffectsFactor(unittest.TestCase):
         sanitised_F_IS = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
                                                        possible_itemsets=self.original_IS['itemsets'])
 
-        # All frequent itemsets in original database D
+        # Set of all itemsets in original database D
         a = set(self.original_IS["itemsets"])
 
-        # All frequent itemsets in sanitised database D'
+        # Set of all itemsets in sanitised database D'
         b = set(sanitised_F_IS["itemsets"])
 
-        # Find sensitive in original database D'
+        # Set of all sensitive itemsets in original database D
         c = set(self.original_IS["itemsets"]).intersection(set(sensitive_IS))
 
         sef = side_effects_factor(a, b, c)
