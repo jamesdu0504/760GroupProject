@@ -1,5 +1,6 @@
 import itertools
 import pandas as pd
+import numpy as np
 import datasets.import_datasets as im #TODO:only here for testing purposes 
 from mlxtend.frequent_patterns import association_rules, fpgrowth
 
@@ -76,7 +77,7 @@ def mdsrrc(mct, mst, database, minded_sensitive_rules):
             if is0 in rhs:
                 support, confidence = support_and_confidence_of_rules[index]
                 new_support=support-1/num_transactions
-                new_confidence= confidence - 1/database.loc[lhs].shape[0]
+                new_confidence= confidence - 1/len(np.where(np.all(database[list(lhs)], axis=1)))
                 support_and_confidence_of_rules[index]=(new_support, new_confidence)
                 if new_support<mst or new_confidence<mct:
                     rule.pop(index)
