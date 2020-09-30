@@ -155,7 +155,7 @@ def main(datasets):
 
                 #Calculating metrics
                 #Variables needed
-                freq_sanitized = sanitized_DB.loc[sanitized_DB["support"] > sigma_min]
+                freq_sanitized = sanitized_DB.loc[sanitized_DB["support"] >= sigma_min]
 
                 freq_sanitized_sensitive = get_sensitive_subsets(freq_sanitized, sensitive_IS)
                 freq_original_sensitive = get_sensitive_subsets(freq_original, sensitive_IS)
