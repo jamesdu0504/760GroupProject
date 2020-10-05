@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from mlxtend.frequent_patterns import fpgrowth
 from mlxtend.frequent_patterns import association_rules
 import time
@@ -19,16 +20,26 @@ import datasets.import_datasets as im
 from statistical_measures import IL, IL_expected
 
 from algorithms.rps import rps
+from algorithms.rps_two_thresholds import rps_two_thresholds
 
 #Hard coding dictionary of datasets to test "Dataset name" : [model threshold, support thresholds...]
+# datasets = {"connect":[ 0.8, 0.85, 0.9],
+#             "chess":[0.7, 0.75, 0.8],
+#             "Belgian_retail":[0.0005, 0.001, 0.0015],
+#             "T40I10D100K":[0.011, 0.015, 0.02],
+#             "T10I4D100K":[0.001, 0.0015, 0.002],
+#             "BMS1":[0.00085, 0.001, 0.002],
+#             "BMS2":[0.0005, 0.001, 0.0015],
+#             "mushroom":[0.1, 0.2, 0.3],}
+
 datasets = {"BMS1":[0.00085, 0.001, 0.002],
             "BMS2":[0.0005, 0.001, 0.0015],
-            "mushroom":[0.1, 0.2, 0.3],
             "connect":[ 0.8, 0.85, 0.9],
             "chess":[0.7, 0.75, 0.8],
             "Belgian_retail":[0.0005, 0.001, 0.0015],
             "T40I10D100K":[0.011, 0.015, 0.02],
-            "T10I4D100K":[0.001, 0.0015, 0.002]}
+            "T10I4D100K":[0.001, 0.0015, 0.002],
+            "mushroom":[0.1, 0.2, 0.3]}
 
 def count_FI_containing_S(freqIS, sensIS):
     #Should find the number of frequent itemsets that contain a sensitive itemset
@@ -72,7 +83,7 @@ def get_top_k_sensitive_itemsets(freqIS, num_sensIS):
             break
     return sensitive_itemsets
 
-def main(datasets):
+def main(datasets, algorithm):
     #Create the base of a table
     table_11 = pd.DataFrame(columns=['Model',
                                      'Support threshold',
@@ -138,13 +149,30 @@ def main(datasets):
                 sensitive_IS = get_top_k_sensitive_itemsets(freq_original, k_freq)
                 num_FI_containing_S = count_FI_containing_S(freq_original, sensitive_IS)
 
-                #Start timer for RPS portion
-                total_time_start = time.time()
+                if algorithm == "RPS":
+                    #Start timer for RPS portion
+                    total_time_start = time.time()
 
-                #Run RPS
-                sanitized_closed_IS = rps(model=copied_model, 
-                                          sensitiveItemsets=sensitive_IS, 
-                                          supportThreshold=sigma_min)
+                    #Run RPS
+                    sanitized_closed_IS = rps(model=copied_model, 
+                                            sensitiveItemsets=sensitive_IS, 
+                                            supportThreshold=sigma_min)
+
+                elif algorithm == "MRPS":
+                    #Convert to pandas format for MRPS input
+                    sensitive_IS_pandas = pd.DataFrame(data=[(sensitive_IS), 
+                                                              np.full((len(sensitive_IS)), sigma_min), 
+                                                              np.full((len(sensitive_IS)), sigma_min-0.5*(sigma_min-sigma_model))]).T
+
+                    sensitive_IS_pandas.columns = ['itemset', 'upper_threshold', 'lower_threshold']
+
+                    #Start timer for RPS portion
+                    total_time_start = time.time()
+
+                    #Run RPS random threshold
+                    sanitized_closed_IS = rps_two_thresholds(model=copied_model, 
+                                                             sensitiveItemsets=sensitive_IS_pandas)
+
 
                 #Reproduce frequent itemsets
                 sanitized_DB = itemsets_from_closed_itemsets(closed_itemsets=sanitized_closed_IS,
@@ -209,4 +237,4 @@ def main(datasets):
                 table_11 = table_11.append(new_row, ignore_index=True)
                 table_11.to_csv('table_11.csv')
 
-main(datasets)
+main(datasets, "MRPS")

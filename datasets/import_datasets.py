@@ -2,6 +2,7 @@ from mlxtend.preprocessing import TransactionEncoder
 from sklearn.preprocessing import MultiLabelBinarizer
 import pandas as pd
 
+
 # Each import function imports a dataset into the form of a matrix, each row is a transaction
 # each column is a item
 
@@ -67,9 +68,9 @@ def import_dataset(name):
     elif name == "instacart":
         return import_instacart()
     elif name == "T40I10D100K" or name == "T10I4D100K":
-        return import_other("../datasets/"+name+".dat.txt")
+        return import_other("./datasets/"+name+".dat.txt")
     else:
-        return import_other("../datasets/"+name+".dat")
+        return import_other("./datasets/"+name+".dat")
 
 def encode_units(x):
     if x <= 0:
