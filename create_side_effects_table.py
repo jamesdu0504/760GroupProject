@@ -38,7 +38,6 @@ def count_FI_containing_S(freqIS, sensIS):
             if s.issubset(row["itemsets"]):
                 count += 1
                 break
-
     return count
 
 def get_sensitive_subsets(original, sensitive):
@@ -81,6 +80,7 @@ def main(datasets):
                                      'Sensitive itemsets',
                                      'Number of FI before sanitization',
                                      'Number of FI containing an element of S before sanitization',
+                                     'Information loss expected',
                                      'Number of FI after sanitization',
                                      'Number of FI containing an element of S after RPS',
                                      'Hiding failure',
@@ -88,7 +88,6 @@ def main(datasets):
                                      'Misses cost',
                                      'Side effects factor',
                                      'Information loss',
-                                     'Information loss expected',
                                      'RPS Time'])
 
     table_10 = pd.DataFrame(columns=['Dataset',
@@ -157,20 +156,25 @@ def main(datasets):
                 #Variables needed
                 freq_sanitized = sanitized_DB.loc[sanitized_DB["support"] >= sigma_min]
 
+                #Sensitive subsets of frequent itemsets
                 freq_sanitized_sensitive = get_sensitive_subsets(freq_sanitized, sensitive_IS)
                 freq_original_sensitive = get_sensitive_subsets(freq_original, sensitive_IS)
 
+                #Non sensitive subset of frequent itemsets
                 freq_sanitized_nonsensitive = remove_sensitive_subsets(freq_sanitized, sensitive_IS)["itemsets"]
                 freq_original_nonsensitive = remove_sensitive_subsets(freq_original, sensitive_IS)["itemsets"]
 
                 #Calculation of metrics
                 hiding_f = hiding_failure(freq_original_sensitive["itemsets"], freq_sanitized_sensitive["itemsets"])
                 artifactual_p = artifactual_patterns(set(freq_original["itemsets"]), set(freq_sanitized["itemsets"]))
-                misses_c = misses_cost(freq_original_nonsensitive, freq_sanitized_nonsensitive)
+                misses_c = misses_cost(freq_original_nonsensitive.copy(), freq_sanitized_nonsensitive.copy())
                 side_effect_fac = side_effects_factor(set(freq_original["itemsets"]), set(freq_sanitized["itemsets"]), set(freq_original_sensitive["itemsets"]))
 
-                information_l = information_loss(freq_original.copy(), freq_sanitized)
-                expected_information_l = expected_information_loss(freq_original.copy(), freq_original_sensitive.copy(), sigma_min)
+                #Information loss between frequent itemsets in original and sanitized at sigma model
+                information_l = information_loss(freq_model.copy(), sanitized_DB)
+
+                #Expected information loss if all sensitive frequent itemsets had their support reduced to sigma min
+                expected_information_l = expected_information_loss(freq_model.copy(), freq_original_sensitive.copy(), sigma_min)
 
                 #Calculate the end time of this iteration
                 end_time = rps_time - total_time_start
@@ -191,6 +195,7 @@ def main(datasets):
                            'Sensitive itemsets': k_freq,
                            'Number of FI before sanitization': len(freq_original),
                            'Number of FI containing an element of S before sanitization': num_FI_containing_S,
+                           'Information loss expected': expected_information_l,
                            'Number of FI after sanitization': len(freq_sanitized),
                            'Number of FI containing an element of S after RPS': num_FI_containing_S_RPS,
                            'Hiding failure': hiding_f,
@@ -198,7 +203,6 @@ def main(datasets):
                            'Misses cost': misses_c,
                            'Side effects factor': side_effect_fac,
                            'Information loss': information_l,
-                           'Information loss expected': expected_information_l,
                            'RPS Time': end_time}
 
                 #Update after each one just so we are sure we are recording results
