@@ -20,7 +20,7 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
                 noSubsets = False
 
         if noSubsets:
-            if frozenset(newItemSet) not in model:
+            if newItemSet not in model:
                 model[frozenset(newItemSet)] = support
 
 
@@ -44,7 +44,6 @@ def rps(model, sensitiveItemsets, supportThreshold):
                         recursiveHiding(itemset, model[itemset], sensitiveItemset, sortedSensitiveItemsets, model)
                         del model[itemset]
                         break
-
     return model
 
 

@@ -139,11 +139,11 @@ def main(datasets, algorithm):
             #Find original frequent itemsets at frequency sigma min
             freq_original = freq_model.loc[freq_model["support"] >= sigma_min]
 
-            #Copy the model so we can edit it directly
-            copied_model = copy.deepcopy(current_model)
-
             for k_freq in [10, 30, 50]:
                 print("-", dataset, ":", k_freq, "Sensitive itemsets")
+
+                #Copy the model so we can edit it directly
+                copied_model = current_model.copy()
                 
                 #We pick sensitive itemsets here
                 sensitive_IS = get_top_k_sensitive_itemsets(freq_original, k_freq)

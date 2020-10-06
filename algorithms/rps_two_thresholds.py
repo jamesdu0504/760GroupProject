@@ -1,14 +1,15 @@
-import random 
+from random import uniform, seed
 import pandas as pd
-import copy
-from mlxtend.frequent_patterns import fpgrowth
 
-import sys
-sys.path.insert(0, '..')
-import datasets.import_datasets as im
-from charm_algorithm import get_closed_itemsets_Charm as get_closed_itemsets
-from support_distribution_graph import dual_support_graph_distribution
-from arm_utilities import itemsets_from_closed_itemsets
+seed(42)
+#from mlxtend.frequent_patterns import fpgrowth
+
+#import sys
+#sys.path.insert(0, '..')
+#import datasets.import_datasets as im
+#from charm_algorithm import get_closed_itemsets_Charm as get_closed_itemsets
+#from support_distribution_graph import dual_support_graph_distribution
+#from arm_utilities import itemsets_from_closed_itemsets
 
 def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets, model):
     '''
@@ -18,8 +19,7 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
     sensitiveItemsets (set) a set of sensitive itemset
     model (dictionary) where keys are closed itemsets and values is the corresponding support
     '''
-    sensitiveItemset = list(sensitiveItemset)
-    random.shuffle(sensitiveItemset)        #the item picked should be picked randomally to ensure robustness
+
     for item in sensitiveItemset:           
         newItemSet=set(itemset)
         newItemSet.remove(item)        
@@ -33,7 +33,7 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
                 noSubsets = False
 
         if noSubsets:
-            if frozenset(newItemSet) not in model:
+            if newItemSet not in model:
                 model[frozenset(newItemSet)] = support
 
 
@@ -58,9 +58,9 @@ def rps_two_thresholds(model, sensitiveItemsets):
         if len(itemset) >= minSizeSensitiveItemset:
             support = model[itemset]
             for sensitiveItemset in sortedSensitiveItemsets.iterrows():
-                sigma = random.uniform(sensitiveItemset[1].lower_threshold, sensitiveItemset[1].upper_threshold)
-                if support >= sigma:
-                    if sensitiveItemset[1].itemset.issubset(itemset):
+                if support >= sensitiveItemset[1].upper_threshold:
+                    sigma = uniform(sensitiveItemset[1].lower_threshold, sensitiveItemset[1].upper_threshold)
+                    if support >= sigma and sensitiveItemset[1].itemset.issubset(itemset):
                         recursiveHiding(itemset, model[itemset], sensitiveItemset[1].itemset, sensitiveItemsets, model)
                         del model[itemset]
                         break
