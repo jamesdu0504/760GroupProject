@@ -33,7 +33,7 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
                 noSubsets = False
 
         if noSubsets:
-            if newItemSet not in model:
+            if frozenset(newItemSet) not in model:
                 model[frozenset(newItemSet)] = support
 
 
