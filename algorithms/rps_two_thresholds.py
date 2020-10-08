@@ -51,7 +51,8 @@ def rps_two_thresholds(model, sensitiveItemsets):
     sortedClosedItemsets = sorted(model.keys(), key=lambda x: len(x)) 
     minSizeSensitiveItemset = len(sortedSensitiveItemsets.iloc[[0]])
 
-    minSupport = min(sensitiveItemsets.lower_threshold)
+    sigma_min = max(sensitiveItemsets.upper_threshold)
+    print("Sigma min:", sigma_min)
     sensitiveItemsets = set(sortedSensitiveItemsets["itemset"])
 
     for itemset in sortedClosedItemsets:
@@ -60,10 +61,12 @@ def rps_two_thresholds(model, sensitiveItemsets):
             for sensitiveItemset in sortedSensitiveItemsets.iterrows():
                 if support >= sensitiveItemset[1].upper_threshold:
                     sigma = uniform(sensitiveItemset[1].lower_threshold, sensitiveItemset[1].upper_threshold)
-                    if support >= sigma and sensitiveItemset[1].itemset.issubset(itemset):
-                        recursiveHiding(itemset, model[itemset], sensitiveItemset[1].itemset, sensitiveItemsets, model)
-                        del model[itemset]
-                        break
+                    if sensitiveItemset[1].itemset.issubset(itemset):
+                        #print(support, sigma)
+                        if support >= sigma:  
+                            recursiveHiding(itemset, model[itemset], sensitiveItemset[1].itemset, sensitiveItemsets, model)
+                            del model[itemset]
+                            break
     return model
 
 
