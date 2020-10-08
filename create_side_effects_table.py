@@ -32,7 +32,14 @@ from algorithms.rps_two_thresholds import rps_two_thresholds
 #             "T10I4D100K":[0.001, 0.0015, 0.002],
 #             "mushroom":[0.1, 0.2, 0.3]}
 
-datasets = {"BMS1":[0.00085, 0.001, 0.002]}
+datasets = {"BMS1":[0.00085, 0.001, 0.002],
+            "BMS2":[0.0005, 0.001, 0.0015],
+            "connect":[ 0.8, 0.85, 0.9],
+            "chess":[0.7, 0.75, 0.8],
+            "Belgian_retail":[0.0005, 0.001, 0.0015],
+            "T40I10D100K":[0.011, 0.015, 0.02],
+            "T10I4D100K":[0.001, 0.0015, 0.002],
+            "mushroom":[0.1, 0.2, 0.3]}
 
 def count_FI_containing_S(freqIS, sensIS):
     #Should find the number of frequent itemsets that contain a sensitive itemset
@@ -43,19 +50,6 @@ def count_FI_containing_S(freqIS, sensIS):
                 count += 1
                 break
     return count
-
-def count_FI_containing_S2(freqIS, sensIS): #Delete later
-    #Should find the number of frequent itemsets that contain a sensitive itemset
-    count = 0
-    print("Printing hiding failures (if any):")
-    for _, row in freqIS.iterrows():
-        for s in sensIS:
-            if s.issubset(row["itemsets"]):
-                print(row["itemsets"], row["support"])
-                count += 1
-                break
-    return count
-
 
 def get_sensitive_subsets(original, sensitive):
     row_mask = []
@@ -145,7 +139,7 @@ def main(datasets, algorithm):
             #Find original frequent itemsets at frequency sigma min
             freq_original = freq_model.loc[freq_model["support"] >= sigma_min]
 
-            for k_freq in [30]:
+            for k_freq in [10, 30]:
                 print("-", dataset, ":", k_freq, "Sensitive itemsets")
 
                 #Copy the model so we can edit it directly
@@ -171,9 +165,6 @@ def main(datasets, algorithm):
                                                               np.full((len(sensitive_IS)), sigma_min-0.5*(sigma_min-sigma_model))]).T
 
                     sensitive_IS_pandas.columns = ['itemset', 'upper_threshold', 'lower_threshold']
-                    
-                    print("Printing sensitive itemsets:")
-                    print(sensitive_IS_pandas)
 
                     #Start timer for RPS portion
                     total_time_start = time.time()
@@ -223,7 +214,7 @@ def main(datasets, algorithm):
                 dual_support_graph_distribution(freq_model, sanitized_DB, sigma_model, dataset+"_"+str(sigma_min)+"_"+str(k_freq))
 
                 #Find number of FI in sanitized database containing sensitive itemsets
-                num_FI_containing_S_RPS = count_FI_containing_S2(freq_sanitized, sensitive_IS)
+                num_FI_containing_S_RPS = count_FI_containing_S(freq_sanitized, sensitive_IS)
 
                 #Add to row of table
                 new_row = {'Model': dataset,

@@ -50,11 +50,9 @@ def rps_two_thresholds(model, sensitiveItemsets):
     sortedSensitiveItemsets = sensitiveItemsets.reindex((sensitiveItemsets["itemset"].str.len()).argsort()).reset_index(drop=True)
     sortedClosedItemsets = sorted(model.keys(), key=lambda x: len(x)) 
     minSizeSensitiveItemset = len(sortedSensitiveItemsets.iloc[[0]])
-
     sigma_min = max(sensitiveItemsets.upper_threshold)
-    print("Sigma min:", sigma_min)
-    sensitiveItemsets = set(sortedSensitiveItemsets["itemset"])
-
+    sensitiveItemsets = sortedSensitiveItemsets["itemset"].tolist()
+    
     for itemset in sortedClosedItemsets:
         if len(itemset) >= minSizeSensitiveItemset:
             support = model[itemset]
