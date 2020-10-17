@@ -8,13 +8,15 @@ def association_rules_from_itemsets():
 
 def SWA(database, sensitive_rules, window_size):
     #Lets assume sensitive rules is a pair <rule, disclosure threshold> (Each restrictive rule has one)
-    transactions_rules = dict() #T
     database_copy = database.copy()
-    victim = {}
+    transactions_rules = dict() #T
+    victim = {} #Victim Item Transaction #TODO different?
 
     #Step 1
-    for index in range(window_size, database.shape[0], window_size): #TODO: fix
-        for i, t in database.iterrows():
+    for index in range(0, database.shape[0], window_size): #Loop through window
+        for i in range(index, min(index+window_size, database.shape[0])): #Loop through transactions in splice
+            t = database.loc[i]
+
             #Sort the items of each transaction in ascending order so we can use binary search
             sensitive = False
             transaction = sorted(list(t["itemset"]))
@@ -23,7 +25,7 @@ def SWA(database, sensitive_rules, window_size):
             #if it has all items of at least one restrictive rule
             #We store a list of transactions for the restrictive rules with frequency
             for rule in sensitive_rules.keys():
-                if rule.issubset(t["itemset"]):
+                if rule.issubset(transaction):
                     transactions_rules[rule] = transactions_rules.get(rule,[]) + [i]
 
                     #for item in rule we add to the frequency?
@@ -45,25 +47,25 @@ def SWA(database, sensitive_rules, window_size):
                     else:
                         victim[rule] = random.choice(rule) #may need to change to list
 
-        num_trans = dict() 
-        for rule in sensitive_rules.keys(): #Step 3
-            num_trans[rule] = len(transactions_rules) * (1-sensitive_rules[rule]) #|T[rri]| = number of sensitive transactions for rri in K
+    num_trans = dict() 
+    for rule in sensitive_rules.keys(): #Step 3
+        num_trans[rule] = len(transactions_rules) * (1-sensitive_rules[rule]) #|T[rri]| = number of sensitive transactions for rri in K
 
-        #Step 4: sort transactions(T[rule]) in ascending order of size
-        for rule in sensitive_rules.keys(): 
-            transactions_rules[rule] = [k for k in sorted(transactions_rules[rule].items(), reversed=True, key=lambda item: len(item[1]))]
+    #Step 4: sort transactions(T[rule]) in ascending order of size
+    for rule in sensitive_rules.keys(): 
+        transactions_rules[rule] = [k for k in sorted(transactions_rules[rule].items(), reversed=True, key=lambda item: len(item[1]))]
 
-        #Step 5: 
-        for rule in sensitive_rules.keys(): 
-            #Select transactions to sanitize
-            transToSanitize = transactions_rules[rule][:num_trans[rule]]
+    #Step 5: 
+    for rule in sensitive_rules.keys(): 
+        #Select transactions to sanitize
+        transToSanitize = transactions_rules[rule][:num_trans[rule]]
 
-            for i in transToSanitize:
-                #Sanitize transaction
-                database_copy.at[i, "itemsets"] = database_copy.at[i, "itemsets"].remove(victim[rule])
+        for i in transToSanitize:
+            #Sanitize transaction
+            database_copy.at[i, "itemsets"] = database_copy.at[i, "itemsets"].remove(victim[rule])
 
-                #TODO: need to do this
-                # if sensitive_rules[rule] == 0:
-                #     do a look ahead(rule, victimrri, t, sensitive_rules)
+            #TODO: need to do this
+            # if sensitive_rules[rule] == 0:
+            #     do a look ahead(rule, victimrri, t, sensitive_rules)
 
-        return database_copy
+    return database_copy
