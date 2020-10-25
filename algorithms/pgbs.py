@@ -38,7 +38,9 @@ def psudo_graph_delete_item_transaction_pair(psudo_graph, pair):
         del psudo_graph[item]["postfix"][transaction]
 
 def transactions_containing_itemset(psudo_graph, itemset):
-    if len(itemset) == 1 :
+    if len(itemset) == 0:
+        transactions_containing_itemset=[]
+    elif len(itemset) == 1 :
         transactions_containing_itemset=psudo_graph[itemset[0]]["prefix"].keys() | psudo_graph[itemset[0]]["postfix"].keys()
     else:
         transactions_containing_itemset=psudo_graph[itemset[0]]["prefix"].keys()
@@ -67,15 +69,14 @@ def sanitization_table(psudo_graph, sensitive_itemsets):
     sensitive_itemsets['itemset_set']=[set(itemset) for itemset in sensitive_itemsets['itemset']]
     while sensitive_itemsets.iloc[0]["n_modify"] !=0:
         itemset=sensitive_itemsets.iloc[0]["itemset"]
-        victim_item=max([(item, support_count(psudo_graph,item), len(sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] >= set([item])])) for item in itemset], key= lambda x: (x[2],x[1]))  #can change for faster implementation 
+        victim_item=max([(item, support_count(psudo_graph,[item]), len(sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] >= set([item])])) for item in itemset], key= lambda x: (x[2],x[1]))  #can change for faster implementation 
         victim_item=victim_item[0]
-
         sensitive_itemsets_with_victim_item=sensitive_itemsets.loc[(sensitive_itemsets['itemset_set']>= set([victim_item])) & (sensitive_itemsets["n_modify"]>0)].copy()
         sensitive_itemsets_with_victim_item.sort_values(by='n_modify', ascending=False, inplace=True)
         while True:
             victim_itemset=set([i for itemset in sensitive_itemsets_with_victim_item['itemset'] for i in itemset])  #victim_itemset is the union of the sensitive itemset contianing the victim item
             victim_itemset=sorted(list(victim_itemset))
-            sensitive_transactions=list(transactions_containing_itemset(psudo_graph, victim_itemset))
+            sensitive_transactions=list(transactions_containing_itemset(psudo_graph, victim_itemset)) #this will change
 
             while sensitive_itemsets.iloc[0]["n_modify"]>0 and sensitive_transactions: #we need to modify less than or equal to n_modify transactions
                 pair=(victim_item, sensitive_transactions.pop())
@@ -102,14 +103,13 @@ def pgbs(database, sensitive_itemsets):
     for item, transaction in sanitization_tbl:
        database.at[transaction, str(item)] = False
    
-
 # database=im.import_dataset("toydata")
-# print(database)
+# #print(database)
 # frequent_itemsets=fpgrowth(database, min_support=0.31, use_colnames=True) 
-# print(frequent_itemsets)
+# #print(frequent_itemsets)
 # data={'itemset':[['4'], ['1','2'], ['2','3']], 'threshold':[0.3, 0.25, 0.6]}
 # sensitive_itemsets= pd.DataFrame(data)
-# print(sensitive_itemsets)
+# #print(sensitive_itemsets)
 # pgbs(database,sensitive_itemsets)
 # frequent_itemsets=fpgrowth(database, min_support=0.31, use_colnames=True) 
 # print(frequent_itemsets)
