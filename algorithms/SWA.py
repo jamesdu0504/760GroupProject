@@ -80,13 +80,17 @@ def SWA(database, sensitive_rules, window_size):
     return database_copy
 
 data = im.import_dataset("toydata")
-db = im.import_toy_transaction(data)
+db = im.convert_to_transaction(data)
 
 print(db)
 
 sensitiveItemsets = {frozenset(["4"]): 0.3, frozenset(["1", "2"]): 0.3}
 
 db = SWA(db, sensitiveItemsets, 10)
+
+db = im.convert_to_matrix(db)
+
+print(db)
 
 model, freq_model = get_closed_itemsets(db, 0.0001)
 

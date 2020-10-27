@@ -72,7 +72,13 @@ def convert_to_transaction(db):
     return transaction_set
 
 def convert_to_matrix(db):
-    pass
+    transactions = []
+    for i, row in db.iterrows():
+        transactions.append(row["itemsets"])
+    te = TransactionEncoder()
+    te_ary = te.fit(transactions).transform(transactions)
+    basket_sets = pd.DataFrame(te_ary, columns=te.columns_)
+    return basket_sets
 
 def import_dataset(name):
     if name == "uci_retail":
@@ -82,7 +88,7 @@ def import_dataset(name):
     elif name == "T40I10D100K" or name == "T10I4D100K":
         return import_other("./datasets/"+name+".dat.txt")
     else:
-        return import_other("./datasets/"+name+".dat")
+        return import_other("../datasets/"+name+".dat")
 
 def encode_units(x):
     if x <= 0:
