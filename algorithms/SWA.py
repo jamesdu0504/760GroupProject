@@ -1,5 +1,6 @@
 import random
 import pandas as pd
+from math import ceil
 
 from mlxtend.frequent_patterns import fpgrowth
 
@@ -20,14 +21,16 @@ def SWA(database, sensitive_rules, window_size):
     #Step 1
     for index in range(0, database.shape[0], window_size): #Loop through window
         transactions_rules = dict() #T
+        transaction_lengths = dict()
+        frequency = dict()
 
         for i in range(index, min(index+window_size, database.shape[0])): #Loop through transactions in splice
             t = database.loc[i]
 
             #Sort the items of each transaction in ascending order so we can use binary search
             sensitive_rules_present = []
-            transaction = sorted(list(t["itemset"]))
-            frequency = dict()
+            transaction = sorted(list(t["itemsets"]))
+            transaction_lengths[i] = len(transaction)
 
             #if it has all items of at least one restrictive rule
             #We store a list of transactions for the restrictive rules with frequency
@@ -42,36 +45,49 @@ def SWA(database, sensitive_rules, window_size):
                     sensitive_rules_present += [rule]
 
             #Step 2:
+            print(frequency)
             if sensitive_rules_present:
                 for rule in sensitive_rules_present:
-                    itemv = max(rule, lambda x: frequency[x])
-                    if frequency.get(itemv,0) > 1: 
+                    itemv = max(rule, key=frequency.get)
+                    print(itemv, frequency[itemv])
+                    if frequency.get(itemv, 0) > 1: 
                         victim[rule] = itemv
                     else:
-                        victim[rule] = random.choice(rule) #may need to change to list
+                        victim[rule] = random.choice(list(rule))
 
         #Step 3:
         num_trans = dict() 
         for rule in sensitive_rules.keys(): #Step 3
-            num_trans[rule] = len(transactions_rules[rule]) * (1-sensitive_rules[rule]) #|T[rri]| = number of sensitive transactions for rri in K
+            num_trans[rule] = ceil(len(transactions_rules[rule]) * (1-sensitive_rules[rule])) #|T[rri]| = number of sensitive transactions for rri in K
 
         #Step 4: sort transactions(T[rule]) in ascending order of size
         for rule in sensitive_rules.keys(): 
-            transactions_rules[rule] = [k for k in sorted(transactions_rules[rule].items(), reversed=True, key=lambda item: len(item[1]))]
+            print(sorted(transactions_rules[rule], key=transaction_lengths.get))
+            transactions_rules[rule] = [k for k in sorted(transactions_rules[rule], key=transaction_lengths.get)]
 
         #Step 5: 
         for rule in sensitive_rules.keys(): 
             #Select transactions to sanitize
             transToSanitize = transactions_rules[rule][:num_trans[rule]]
-
+            print(transToSanitize)
             for i in transToSanitize:
                 #Sanitize transaction
-                database_copy.at[i, "itemsets"] = database_copy.at[i, "itemsets"].remove(victim[rule])
+                print("Before:", database_copy.at[i, "itemsets"], victim[rule])
+                database_copy.at[i, "itemsets"] = set(database_copy.at[i, "itemsets"]).difference(victim[rule])
+                print("After:", database_copy.at[i, "itemsets"], victim[rule])
+            print(database_copy)
 
     return database_copy
 
 data = im.import_dataset("toydata")
+db = im.import_toy_transaction(data)
+
+print(db)
 
 sensitiveItemsets = {frozenset(["4"]): 0.3, frozenset(["1", "2"]): 0.3}
 
-SWA(data, sensitiveItemsets, 10)
+db = SWA(db, sensitiveItemsets, 10)
+
+model, freq_model = get_closed_itemsets(db, 0.0001)
+
+print(freq_model)
