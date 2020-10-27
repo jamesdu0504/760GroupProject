@@ -42,7 +42,7 @@ class TestMissesCost(unittest.TestCase):
         # Get frequent itemsets
         cls.original_Freq_IS = cls.original_IS[cls.original_IS["support"] >= cls.sigma_min]
 
-    def test_misses_cost_with_rps(self):
+    def test_information_loss_with_rps(self):
 
         # Sensitive closed itemsets whose support needs to be reduced
         sensitive_IS = {frozenset(['1', '2']), frozenset(['4'])}
@@ -66,14 +66,18 @@ class TestMissesCost(unittest.TestCase):
         self.assertEqual(0.3133, round(il,4)) #Using expected IL found in excel
 
 
-    def test_misses_cost_with_pgbs(self):
+    def test_information_loss_with_pgbs(self):
         # Sensitive closed itemsets whose support needs to be reduced
-        sensitive_itemsets = pd.DataFrame({'itemset': [['4'], ['1', '2']], 'threshold': [self.sigma_min, self.sigma_min]})
+        sensitive_itemsets = pd.DataFrame({
+            'itemset': [['1', '2'], ['1', '2', '4'], ['4']],
+            'threshold': [self.sigma_min, self.sigma_min, self.sigma_min]})
 
         original_database = self.basket_sets.copy()
         modified_database = self.basket_sets.copy()
 
         # No return value, instead it modifies input database in place
+        print(sensitive_itemsets)
+        print(sensitive_itemsets.dtypes)
         pgbs(modified_database, sensitive_itemsets)
 
         # Give all itemsets and supports in D (original_database)
