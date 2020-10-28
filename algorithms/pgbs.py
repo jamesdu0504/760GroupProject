@@ -73,8 +73,13 @@ def sanitization_table(psudo_graph, sensitive_itemsets):
         victim_item=victim_item[0]
         sensitive_itemsets_with_victim_item=sensitive_itemsets.loc[(sensitive_itemsets['itemset_set']>= set([victim_item])) & (sensitive_itemsets["n_modify"]>0)].copy()
         sensitive_itemsets_with_victim_item.sort_values(by='n_modify', ascending=False, inplace=True)
+
+        # end_pointer points to effective end of sensitive_itemsets_With_victim_item DF
+        end_pointer = 0
         while True:
-            victim_itemset=set([i for itemset in sensitive_itemsets_with_victim_item['itemset'] for i in itemset])  #victim_itemset is the union of the sensitive itemset contianing the victim item
+            victim_itemset=set([i
+                                for itemset in sensitive_itemsets_with_victim_item['itemset'][:len(sensitive_itemsets_with_victim_item['itemset'])-end_pointer]
+                                for i in itemset])  #victim_itemset is the union of the sensitive itemset contianing the victim item
             victim_itemset=sorted(list(victim_itemset))
             sensitive_transactions=list(transactions_containing_itemset(psudo_graph, victim_itemset)) #this will change
 
@@ -88,7 +93,8 @@ def sanitization_table(psudo_graph, sensitive_itemsets):
                 sensitive_itemsets.sort_values(by='n_modify', ascending=False, inplace=True)
                 break
             else:
-                sensitive_itemsets_with_victim_item.drop(sensitive_itemsets_with_victim_item.tail(1).index, inplace = True)
+                # sensitive_itemsets_with_victim_item.drop(sensitive_itemsets_with_victim_item.tail(1).index, inplace = True)
+                end_pointer += 1
     return sanitization_tbl
 
 def pgbs(database, sensitive_itemsets):
