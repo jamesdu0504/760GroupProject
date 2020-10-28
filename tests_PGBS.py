@@ -49,6 +49,11 @@ def count_FI_containing_S(freqIS, sensIS):
                 break
     return count
 
+def convert_to_sets(sensitive):
+    for i in range(len(sensitive)):
+        sensitive[i] = set(sensitive[i])
+    return sensitive
+
 def get_sensitive_subsets(original, sensitive):
     row_mask = []
     for i, row in original.iterrows():
@@ -69,14 +74,14 @@ def remove_sensitive_subsets(original, sensitive):
 
 def get_top_k_sensitive_itemsets(freqIS, num_sensIS):
     #Should return the sensitive itemsets
-    sensitive_itemsets = set()
+    sensitive_itemsets = []
     
     #Sort first
     freqIS = freqIS.sort_values(by='support', ascending=False)
 
     for _, row in freqIS.iterrows():
         if len(row["itemsets"]) >= 2:
-            sensitive_itemsets.add(row["itemsets"])
+            sensitive_itemsets.append(list(row["itemsets"]))
         if len(sensitive_itemsets) == num_sensIS:
             break
     return sensitive_itemsets
@@ -88,7 +93,6 @@ def main(datasets):
                                      'Model threshold',
                                      'Sensitive itemsets',
                                      'Number of FI before sanitization',
-                                     'Number of FI containing an element of S before sanitization',
                                      'Information loss expected',
                                      'Number of FI after sanitization',
                                      'Number of FI containing an element of S after RPS',
@@ -126,7 +130,6 @@ def main(datasets):
                 
                 #We pick sensitive itemsets here
                 sensitive_IS = get_top_k_sensitive_itemsets(freq_original, k_freq)
-                num_FI_containing_S = count_FI_containing_S(freq_original, sensitive_IS)
 
                 #Start timer for PGBS portion
                 total_time_start = time.time()
@@ -136,11 +139,12 @@ def main(datasets):
 
                 sensitive_IS_pandas.columns = ['itemset', 'threshold']
 
-                print("Starting PGBS")
+                print(sensitive_IS_pandas)
+
                 #Run PGBS
                 pgbs(copied_data,sensitive_IS_pandas)
 
-                print("Converting to sanitized")
+                sensitive_IS = convert_to_sets(sensitive_IS)
 
                 #Reproduce frequent itemsets
                 freq_model_sanitized = fpgrowth(copied_data, min_support=sigma_model, use_colnames=True) 
@@ -160,6 +164,10 @@ def main(datasets):
                 freq_original_nonsensitive = remove_sensitive_subsets(freq_original, sensitive_IS)["itemsets"]
 
                 #Calculation of metrics
+                freq_original_sensitive.to_csv("original.csv")
+                freq_sanitized_sensitive.to_csv("sanitized.csv")
+                print("len:", len(freq_original_sensitive["itemsets"]), len(freq_sanitized_sensitive["itemsets"]))
+
                 hiding_f = hiding_failure(freq_original_sensitive["itemsets"], freq_sanitized_sensitive["itemsets"])
                 artifactual_p = artifactual_patterns(set(freq_original["itemsets"]), set(freq_sanitized["itemsets"]))
                 misses_c = misses_cost(freq_original_nonsensitive.copy(), freq_sanitized_nonsensitive.copy())
@@ -189,7 +197,6 @@ def main(datasets):
                            'Support threshold': sigma_min,
                            'Sensitive itemsets': k_freq,
                            'Number of FI before sanitization': len(freq_original),
-                           'Number of FI containing an element of S before sanitization': num_FI_containing_S,
                            'Information loss expected': expected_information_l,
                            'Number of FI after sanitization': len(freq_sanitized),
                            'Number of FI containing an element of S after RPS': num_FI_containing_S_RPS,
