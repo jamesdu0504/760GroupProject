@@ -1,7 +1,7 @@
 from math import floor
 import pandas as pd
 import datasets.import_datasets as im #TODO:only here for testing purposes 
-from mlxtend.frequent_patterns import association_rules, fpgrowth
+# from mlxtend.frequent_patterns import association_rules, fpgrowth
 
 def psudo_graph(transactions):
     """
@@ -10,7 +10,7 @@ def psudo_graph(transactions):
         postfix - in comming edges 
     """
     pg=dict()
-    for transaction_id, transaction in transactions:
+    for transaction_id, transaction in enumerate(transactions):
         for i in range(len(transaction)):
             u=transaction[i]
             if i != len(transaction) - 1:
@@ -100,7 +100,8 @@ def sanitization_table(psudo_graph, sensitive_itemsets):
 def pgbs(database, sensitive_itemsets):
     #preprocessing
     d=len(database.index)       #number of transactions
-    transactions=[(row, sorted([item for item in database.columns if database.at[row, item] == True])) for row in database.index]
+    database = im.convert_to_transaction(database, False)
+    transactions=[row[1]["itemsets"] for row in database.iterrows()]
     sensitive_itemsets["itemset"]=sensitive_itemsets["itemset"].apply(lambda x: sorted(x))
     pg = psudo_graph(transactions)
     sensitive_count_table(pg, sensitive_itemsets, d)
@@ -110,13 +111,13 @@ def pgbs(database, sensitive_itemsets):
     for item, transaction in sanitization_tbl:
        database.at[transaction, str(item)] = False
    
-database=im.import_dataset("toydata")
-#print(database)
-frequent_itemsets=fpgrowth(database, min_support=0.31, use_colnames=True) 
-#print(frequent_itemsets)
-data={'itemset':[['4'], ['1','2'], ['2','3']], 'threshold':[0.3, 0.25, 0.6]}
-sensitive_itemsets= pd.DataFrame(data)
-#print(sensitive_itemsets)
-pgbs(database,sensitive_itemsets)
-frequent_itemsets=fpgrowth(database, min_support=0.31, use_colnames=True) 
-print(frequent_itemsets)
+# database=im.import_dataset("toydata")
+# #print(database)
+# frequent_itemsets=fpgrowth(database, min_support=0.31, use_colnames=True) 
+# #print(frequent_itemsets)
+# data={'itemset':[['4'], ['1','2'], ['2','3']], 'threshold':[0.3, 0.25, 0.6]}
+# sensitive_itemsets= pd.DataFrame(data)
+# #print(sensitive_itemsets)
+# pgbs(database,sensitive_itemsets)
+# frequent_itemsets=fpgrowth(database, min_support=0.31, use_colnames=True) 
+# print(frequent_itemsets)
