@@ -100,8 +100,8 @@ def sanitization_table(psudo_graph, sensitive_itemsets):
 def pgbs(database, sensitive_itemsets):
     #preprocessing
     d=len(database.index)       #number of transactions
-    database = im.convert_to_transaction(database, False)
-    transactions=[row[1]["itemsets"] for row in database.iterrows()]
+    db = im.convert_to_transaction(database, False)
+    transactions=[row[1]["itemsets"] for row in db.iterrows()]
     sensitive_itemsets["itemset"]=sensitive_itemsets["itemset"].apply(lambda x: sorted(x))
     pg = psudo_graph(transactions)
     sensitive_count_table(pg, sensitive_itemsets, d)
@@ -109,7 +109,7 @@ def pgbs(database, sensitive_itemsets):
     sanitization_tbl = sanitization_table(pg, sensitive_itemsets)
     #deleting items
     for item, transaction in sanitization_tbl:
-       database.at[transaction, str(item)] = False
+        database.at[transaction, str(item)] = False
    
 # database=im.import_dataset("toydata")
 # #print(database)
