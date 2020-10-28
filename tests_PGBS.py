@@ -139,18 +139,18 @@ def main(datasets):
 
                 sensitive_IS_pandas.columns = ['itemset', 'threshold']
 
-                print(sensitive_IS_pandas)
-
                 #Run PGBS
+                print("Running PGBS")
                 pgbs(copied_data,sensitive_IS_pandas)
-
-                sensitive_IS = convert_to_sets(sensitive_IS)
-
-                #Reproduce frequent itemsets
-                freq_model_sanitized = fpgrowth(copied_data, min_support=sigma_model, use_colnames=True) 
-
+                print("PGBS run")
                 pgbs_time = time.time()
 
+                sensitive_IS = convert_to_sets(sensitive_IS)
+                
+                print("FPGrowth")
+                #Reproduce frequent itemsets
+                freq_model_sanitized = fpgrowth(copied_data, min_support=sigma_model, use_colnames=True)
+                
                 #Calculating metrics
                 #Variables needed
                 freq_sanitized = freq_model_sanitized.loc[freq_model_sanitized["support"] >= sigma_min]

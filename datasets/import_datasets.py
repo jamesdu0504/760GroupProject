@@ -62,6 +62,18 @@ def import_other(filename):
     basket_sets = pd.DataFrame(te_ary, columns=te.columns_)
     return basket_sets
 
+def convert_to_transaction(db, list_or_set=True):
+    #This reads the files that come in the format of one line per transaction
+    transactions = {}
+    for i, row in db.iterrows():
+        row_set = row.index[row == True].tolist()
+        if list_or_set:
+            transactions[i] = set(row_set)
+        else:
+            transactions[i] = list(row_set)
+    transaction_set = pd.DataFrame(transactions.items(), columns=['index', 'itemsets'])
+    return transaction_set
+
 def import_dataset(name):
     if name == "uci_retail":
         return import_uci_retail()
