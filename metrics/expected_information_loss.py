@@ -10,8 +10,9 @@ def expected_information_loss(a: set, b: set, sigma: float):
     """
 
     denominator = a.support.sum()
-    #Subtract sigma only from frequencies containing a sensitive itemset
-    a.loc[a["itemsets"].isin(b["itemsets"]), "support"] = a["support"] - sigma
-    numerator = sum(abs(a["support"]))
+    #Subtract sigma only from frequent itemsets containing a sensitive itemset
+    original = sum(abs(a["support"]))
+    c = a.loc[a["itemsets"].isin(b["itemsets"]), "support"] - sigma
+    numerator = sum(abs(c))
 
     return numerator / denominator

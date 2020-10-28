@@ -54,12 +54,12 @@ class TestExpectedInformationLoss(unittest.TestCase):
         sensitive_IS = {frozenset(['1', '2']), frozenset(['4'])}
 
         # Give all itemsets and supports in D
-        a = self.original_Freq_IS
+        a = self.original_IS
 
         b = get_sensitive_subsets(self.original_Freq_IS, sensitive_IS)
 
         eil = expected_information_loss(a, b, self.sigma_min)
-        self.assertEqual(0.7273, round(eil,4))
+        self.assertEqual(0.2289, round(eil,4))
 
 
 if __name__ == '__main__':

@@ -44,7 +44,6 @@ def rps(model, sensitiveItemsets, supportThreshold):
                         recursiveHiding(itemset, model[itemset], sensitiveItemset, sortedSensitiveItemsets, model)
                         del model[itemset]
                         break
-
     return model
 
 

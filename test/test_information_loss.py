@@ -53,13 +53,13 @@ class TestMissesCost(unittest.TestCase):
                                                        possible_itemsets=self.original_IS['itemsets'])
 
         # Give all itemsets and supports in D
-        a = self.original_Freq_IS           #We want frequent itemsets only
+        a = self.original_IS           #We want frequent itemsets only
 
         # Give all itemsets and supports in D'
         b = sanitised_F_IS
 
         il = information_loss(a, b)
-        self.assertEqual(0.3377, round(il,4)) #Using expected IL found in excel
+        self.assertEqual(0.3133, round(il,4)) #Using expected IL found in excel
 
 
 if __name__ == '__main__':

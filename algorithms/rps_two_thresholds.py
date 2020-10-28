@@ -1,15 +1,25 @@
-import random 
+from random import uniform, seed
+import pandas as pd
+
+seed(42)
+#from mlxtend.frequent_patterns import fpgrowth
+
+#import sys
+#sys.path.insert(0, '..')
+#import datasets.import_datasets as im
+#from charm_algorithm import get_closed_itemsets_Charm as get_closed_itemsets
+#from support_distribution_graph import dual_support_graph_distribution
+#from arm_utilities import itemsets_from_closed_itemsets
 
 def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets, model):
     '''
     itemset (set)
     support (float) support of itemset
     sensitiveItemset (set) the sensitive itemset which is a subset of itemset and must be removed
-    model (dictionary) where keys are closed itemsets and values is the corresponding support
     sensitiveItemsets (set) a set of sensitive itemset
+    model (dictionary) where keys are closed itemsets and values is the corresponding support
     '''
-    sensitiveItemset =list(sensitiveItemset)
-    random.shuffle(sensitiveItemset)        #the item picked should be picked randomally to ensure robustness
+
     for item in sensitiveItemset:           
         newItemSet=set(itemset)
         newItemSet.remove(item)        
@@ -28,51 +38,62 @@ def recursiveHiding(itemset, support, sensitiveItemset, sortedSensitiveItemsets,
 
 
 
-def rps_two_thresholds(model, sensitiveItemsets, supportThreshold1, supportThreshold2):
+def rps_two_thresholds(model, sensitiveItemsets):
     '''
     model (dictionary) where keys are closed itemsets and values is the corresponding support
-    sensitiveItemsets (set) a set of sensitive itemsets
-    supportThreshold (float) minimum support threshold for hiding rules
+    sensitiveItemsets (pandas dataframe) each row is a sensitive itemset
+        "itemset": the sensitive itemset
+        "upper_threshold": the maximum value we want to hide below
+        "lower_threshold": the minimum value we want to hide below
     '''
-
-    sortedSensitiveItemsets= sorted(sensitiveItemsets, key=lambda x: len(x))
-    sortedClosedItemsets = sorted(model.keys(), key=lambda x: len(x))
-    minSizeSensitiveItemset =len(sortedSensitiveItemsets[0])
+    #Sort rows by length of itemsets
+    sortedSensitiveItemsets = sensitiveItemsets.reindex((sensitiveItemsets["itemset"].str.len()).argsort()).reset_index(drop=True)
+    sortedClosedItemsets = sorted(model.keys(), key=lambda x: len(x)) 
+    minSizeSensitiveItemset = len(sortedSensitiveItemsets.iloc[[0]])
+    sigma_min = max(sensitiveItemsets.upper_threshold)
+    sensitiveItemsets = sortedSensitiveItemsets["itemset"].tolist()
 
     for itemset in sortedClosedItemsets:
         if len(itemset) >= minSizeSensitiveItemset:
             support = model[itemset]
-            randNum = random.randint(0, 1)
-            if randNum==0 and support >= supportThreshold1 or  randNum==1 and support >= supportThreshold2:
-                for sensitiveItemset in sortedSensitiveItemsets:
-                    if sensitiveItemset.issubset(itemset):
-                        recursiveHiding(itemset, model[itemset], sensitiveItemset, sortedSensitiveItemsets, model)
+            for sensitiveItemset in sortedSensitiveItemsets.iterrows():
+                if support >= sensitiveItemset[1].lower_threshold:
+                    sigma = uniform(sensitiveItemset[1].lower_threshold, sensitiveItemset[1].upper_threshold)
+                    if sensitiveItemset[1].itemset.issubset(itemset) and support >= sigma:  
+                        recursiveHiding(itemset, model[itemset], sensitiveItemset[1].itemset, sensitiveItemsets, model)
                         del model[itemset]
                         break
-
     return model
 
 
-#example
+# def test_case(model, freq_model, sensitiveItemsets, i):
+#     new_model = rps_two_thresholds(model.copy(), sensitiveItemsets)
+#     freq = itemsets_from_closed_itemsets(closed_itemsets=new_model,
+#                                          possible_itemsets=freq_model['itemsets'])
+#     print("For test:", i)
+#     print(freq)
 
-model = {frozenset([2]): 1.0,
-         frozenset([2, 3]): 0.6,
-         frozenset([2, 4]): 0.7,
-         frozenset([2, 5]): 0.9,
-         frozenset([2, 3, 4]): 0.3,
-         frozenset([2, 3, 5]): 0.5,
-         frozenset([1, 2, 5]): 0.8,
-         frozenset([1, 2, 3, 5]): 0.6,
-         frozenset([1, 2, 4, 5]): 0.6,
-         frozenset([1, 2, 3, 4, 5]): 0.2,
-         }
 
-sensitiveItemsets = {
-    frozenset([4]),
-    frozenset([1, 2]),
-}
+# #Example
+# data = im.import_dataset("toydata")
+# model, freq_model = get_closed_itemsets(data, 0.0001)
 
-supportThreshold1 = 0.3
-supportThreshold2 = 0.2
+# #Normal case - hide all below a fixed sigma min (0.3)
+# sensitiveItemsets = pd.DataFrame(columns=['itemset', 'upper_threshold', 'lower_threshold'], 
+#                                  data=[(frozenset(["4"]), 0.3, 0.3), (frozenset(["1", "2"]), 0.3, 0.3)])
+# test_case(model, freq_model, sensitiveItemsets, 1)
 
-print(rps_two_thresholds(model, sensitiveItemsets, supportThreshold1, supportThreshold2 ))
+# #Hiding randomly within a range 0.3 - 0.2
+# sensitiveItemsets = pd.DataFrame(columns=['itemset', 'upper_threshold', 'lower_threshold'], 
+#                                  data=[(frozenset(["4"]), 0.3, 0.2), (frozenset(["1", "2"]), 0.3, 0.2)])
+# test_case(model, freq_model, sensitiveItemsets, 2)
+
+# #Hiding below manually defined fixed thresholds
+# sensitiveItemsets = pd.DataFrame(columns=['itemset', 'upper_threshold', 'lower_threshold'], 
+#                                  data=[(frozenset(["4"]), 0.25, 0.25), (frozenset(["1", "2"]), 0.4, 0.4)])
+# test_case(model, freq_model, sensitiveItemsets, 3)
+
+# #Hiding randomly below manually defined thresholds 
+# sensitiveItemsets = pd.DataFrame(columns=['itemset', 'upper_threshold', 'lower_threshold'], 
+#                                  data=[(frozenset(["4"]), 0.25, 0.2), (frozenset(["1", "2"]), 0.3, 0.25)])
+# test_case(model, freq_model, sensitiveItemsets, 4)

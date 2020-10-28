@@ -2,6 +2,7 @@ from mlxtend.preprocessing import TransactionEncoder
 from sklearn.preprocessing import MultiLabelBinarizer
 import pandas as pd
 
+
 # Each import function imports a dataset into the form of a matrix, each row is a transaction
 # each column is a item
 
