@@ -8,9 +8,13 @@ from metrics.information_loss import information_loss
 from arm_utilities import get_closed_itemsets, itemsets_from_closed_itemsets
 import datasets.import_datasets as im
 from algorithms.rps import rps
+from algorithms.pgbs import pgbs
+
+import pandas as pd
 
 class TestMissesCost(unittest.TestCase):
 
+    basket_sets = None
     original_IS = None
     original_NFreq_IS = None
     original_Freq_IS = None
@@ -23,14 +27,14 @@ class TestMissesCost(unittest.TestCase):
     def setUpClass(cls):
 
         # Get toy data, WARNING! Had to change relative reference for this to work
-        basket_sets = im.import_dataset("toydata")
+        cls.basket_sets = im.import_dataset("toydata")
 
         # Abuse FPGrowth using absolute smallest min support to get all itemsets as frequent itemsets
-        sigma_model = 1 / len(basket_sets)
-        cls.original_IS = fpgrowth(basket_sets, min_support=sigma_model, use_colnames=True, verbose=False)
+        sigma_model = 1 / len(cls.basket_sets)
+        cls.original_IS = fpgrowth(cls.basket_sets, min_support=sigma_model, use_colnames=True, verbose=False)
 
         # Compute closed itemsets of original data base
-        cls.original_Closed_IS, _ = get_closed_itemsets(basket_sets, sigma_model)
+        cls.original_Closed_IS, _ = get_closed_itemsets(cls.basket_sets, sigma_model)
 
         # Get non-frequent itemsets
         cls.original_NFreq_IS = cls.original_IS[cls.original_IS["support"] < cls.sigma_min]
@@ -38,7 +42,7 @@ class TestMissesCost(unittest.TestCase):
         # Get frequent itemsets
         cls.original_Freq_IS = cls.original_IS[cls.original_IS["support"] >= cls.sigma_min]
 
-    def test_misses_cost_with_rps(self):
+    def test_information_loss_with_rps(self):
 
         # Sensitive closed itemsets whose support needs to be reduced
         sensitive_IS = {frozenset(['1', '2']), frozenset(['4'])}
@@ -60,6 +64,31 @@ class TestMissesCost(unittest.TestCase):
 
         il = information_loss(a, b)
         self.assertEqual(0.3133, round(il,4)) #Using expected IL found in excel
+
+
+    def test_information_loss_with_pgbs(self):
+        # Sensitive closed itemsets whose support needs to be reduced
+        sensitive_itemsets = pd.DataFrame({
+            'itemset': [['1', '2'], ['1', '2', '4'], ['4']],
+            'threshold': [self.sigma_min, self.sigma_min, self.sigma_min]})
+
+        original_database = self.basket_sets.copy()
+        modified_database = self.basket_sets.copy()
+
+        # No return value, instead it modifies input database in place
+        print(sensitive_itemsets)
+        print(sensitive_itemsets.dtypes)
+        pgbs(modified_database, sensitive_itemsets)
+
+        # Give all itemsets and supports in D (original_database)
+        sigma_model = 1 / len(original_database)
+        a = fpgrowth(original_database, min_support=sigma_model, use_colnames=True, verbose=False)
+
+        # Give all itemsets and supports in D' (modified_database)
+        b = fpgrowth(modified_database, min_support=sigma_model, use_colnames=True, verbose=False)
+
+        il = information_loss(a, b)
+        self.assertEqual(0.5542, round(il, 4))
 
 
 if __name__ == '__main__':
