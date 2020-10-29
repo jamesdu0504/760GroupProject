@@ -92,7 +92,7 @@ def import_dataset(name):
     elif name == "T40I10D100K" or name == "T10I4D100K":
         return import_other("./datasets/"+name+".dat.txt")
     else:
-        return import_other("../datasets/"+name+".dat")
+        return import_other("./datasets/"+name+".dat")
 
 def encode_units(x):
     if x <= 0:

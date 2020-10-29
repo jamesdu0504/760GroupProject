@@ -12,17 +12,16 @@ from support_distribution_graph import dual_support_graph_distribution
 from arm_utilities import itemsets_from_closed_itemsets
 
 
-
 def SWA(database, sensitive_rules, window_size):
     #Lets assume sensitive rules is a pair <rule, disclosure threshold> (Each restrictive rule has one)
     database_copy = database.copy()
-    victim = {} #Victim Item Transaction
 
     #Step 1
     for index in range(0, database.shape[0], window_size): #Loop through window
         transactions_rules = dict() #T
         transaction_lengths = dict()
         frequency = dict()
+        victim = {} #Victim Item Transaction
 
         for i in range(index, min(index+window_size, database.shape[0])): #Loop through transactions in splice
             t = database.loc[i]
@@ -45,11 +44,9 @@ def SWA(database, sensitive_rules, window_size):
                     sensitive_rules_present += [rule]
 
             #Step 2:
-            print(frequency)
             if sensitive_rules_present:
                 for rule in sensitive_rules_present:
                     itemv = max(rule, key=frequency.get)
-                    print(itemv, frequency[itemv])
                     if frequency.get(itemv, 0) > 1: 
                         victim[rule] = itemv
                     else:
@@ -62,36 +59,30 @@ def SWA(database, sensitive_rules, window_size):
 
         #Step 4: sort transactions(T[rule]) in ascending order of size
         for rule in sensitive_rules.keys(): 
-            print(sorted(transactions_rules[rule], key=transaction_lengths.get))
-            transactions_rules[rule] = [k for k in sorted(transactions_rules[rule], key=transaction_lengths.get)]
+            transactions_rules[rule] = sorted(transactions_rules[rule], key=transaction_lengths.get)
 
         #Step 5: 
         for rule in sensitive_rules.keys(): 
             #Select transactions to sanitize
             transToSanitize = transactions_rules[rule][:num_trans[rule]]
-            print(transToSanitize)
             for i in transToSanitize:
                 #Sanitize transaction
-                print("Before:", database_copy.at[i, "itemsets"], victim[rule])
-                database_copy.at[i, "itemsets"] = set(database_copy.at[i, "itemsets"]).difference(victim[rule])
-                print("After:", database_copy.at[i, "itemsets"], victim[rule])
-            print(database_copy)
-
+                database_copy.at[i, "itemsets"].discard(victim[rule])
     return database_copy
 
-data = im.import_dataset("toydata")
-db = im.convert_to_transaction(data)
+# data = im.import_dataset("toydata")
+# db = im.convert_to_transaction(data)
 
-print(db)
+# print(db)
 
-sensitiveItemsets = {frozenset(["4"]): 0.3, frozenset(["1", "2"]): 0.3}
+# sensitiveItemsets = {frozenset(["4"]): 0.3, frozenset(["1", "2"]): 0.3}
 
-db = SWA(db, sensitiveItemsets, 10)
+# db = SWA(db, sensitiveItemsets, 10)
 
-db = im.convert_to_matrix(db)
+# db = im.convert_to_matrix(db)
 
-print(db)
+# print(db)
 
-model, freq_model = get_closed_itemsets(db, 0.0001)
+# model, freq_model = get_closed_itemsets(db, 0.0001)
 
-print(freq_model)
+# print(freq_model)
