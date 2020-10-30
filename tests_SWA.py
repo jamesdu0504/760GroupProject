@@ -116,29 +116,27 @@ def main(datasets):
     for dataset in datasets:
         #Loop through support thresholds #TODO: error running this in the normal way but
         #It is not much of a slowdown for SWA to have this here
+        
+        #Load dataset
+        sigma_model = datasets[dataset][0]
+        db = im.import_dataset(dataset)
+        db = db.astype('bool') #This may be needed for some datasets
+        print("\n", dataset, "imported")
+        
+        #Get frequent itemsets
+        freq_model = fpgrowth(db, min_support=sigma_model, use_colnames=True) 
+        
         for sigma_min in datasets[dataset][1:]:
-
-            sigma_model = datasets[dataset][0]
-
-            #Load dataset
-            data = im.import_dataset(dataset)
-            data = data.astype('bool') #This may be needed for some datasets
-            print(dataset, "imported\n")
-
-            #Get frequent itemsets
-            freq_model = fpgrowth(data, min_support=sigma_model, use_colnames=True) 
-            data = im.convert_to_transaction(data)
-
             print("\n", dataset, "FI:", sigma_min)
-            
+                
             #Find original frequent itemsets at frequency sigma min
             freq_original = freq_model.loc[freq_model["support"] >= sigma_min]
 
             for k_freq in [10, 30, 50]:
-                print("-", dataset, ":", k_freq, "Sensitive itemsets")
 
-                #Copy the transactions so we can edit it directly
-                copied_data = data.copy(deep=True)
+                data = im.convert_to_transaction(db)
+            
+                print(dataset, ":", k_freq, "Sensitive itemsets")
                 
                 #We pick sensitive itemsets here
                 sensitive_IS = get_top_k_sensitive_itemsets(freq_original, k_freq)
@@ -150,18 +148,15 @@ def main(datasets):
                 sensitive_rules = get_disclosures(sensitive_IS, freq_model, sigma_min)
                 
                 #Run SWA
-                print("Running SWA", copied_data.shape[0])
-                SWA(copied_data, sensitive_rules, copied_data.shape[0])
-                print("SWA run")
+                SWA(data, sensitive_rules, data.shape[0])
                 swa_time = time.time()
 
                 sensitive_IS = convert_to_sets(sensitive_IS)
                 
-                copied_data = im.convert_to_matrix(copied_data)
+                data = im.convert_to_matrix(data)
 
-                print("FPGrowth")
                 #Reproduce frequent itemsets
-                freq_model_sanitized = fpgrowth(copied_data, min_support=sigma_model, use_colnames=True)
+                freq_model_sanitized = fpgrowth(data, min_support=sigma_model, use_colnames=True)
                 
                 #Calculating metrics
                 #Variables needed
@@ -178,7 +173,7 @@ def main(datasets):
                 #Calculation of metrics
                 freq_original_sensitive.to_csv("original.csv")
                 freq_sanitized_sensitive.to_csv("sanitized.csv")
-                print("len:", len(freq_original_sensitive["itemsets"]), len(freq_sanitized_sensitive["itemsets"]))
+                print("- len:", len(freq_original_sensitive["itemsets"]), len(freq_sanitized_sensitive["itemsets"]))
 
                 hiding_f = hiding_failure(freq_original_sensitive["itemsets"], freq_sanitized_sensitive["itemsets"])
                 artifactual_p = artifactual_patterns(set(freq_original["itemsets"]), set(freq_sanitized["itemsets"]))

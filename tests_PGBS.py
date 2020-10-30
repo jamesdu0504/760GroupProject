@@ -122,7 +122,7 @@ def main(datasets):
             #Find original frequent itemsets at frequency sigma min
             freq_original = freq_model.loc[freq_model["support"] >= sigma_min]
 
-            for k_freq in [10, 30, 50]:
+            for k_freq in [10, 30]:
                 print("-", dataset, ":", k_freq, "Sensitive itemsets")
 
                 #Copy the transactions so we can edit it directly
