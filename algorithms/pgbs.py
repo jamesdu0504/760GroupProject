@@ -84,7 +84,7 @@ def sanitization_table(psudo_graph, sensitive_itemsets):
         # end_pointer points to effective end of sensitive_itemsets_With_victim_item DF
         end_pointer = 0
         while True:
-            if end_pointer > 2:
+            if end_pointer > 20:
                 print(end_pointer)
             victim_itemset=set([i
                                 for itemset in sensitive_itemsets_with_victim_item['itemset'][:len(sensitive_itemsets_with_victim_item['itemset'])-end_pointer]
@@ -101,12 +101,13 @@ def sanitization_table(psudo_graph, sensitive_itemsets):
                 for itemset_set in sensitive_itemsets_with_victim_item["itemset_set"][:len(sensitive_itemsets_with_victim_item['itemset'])-end_pointer]:
                     sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] == itemset_set, 'n_modify']-=1
                     if sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] == itemset_set, 'n_modify'].item() == 0:
-                        set_zero=True
+                        set_zero = True
                 if set_zero:
                     break
 
             if sensitive_itemsets.iloc[0]["n_modify"] == 0 or set_zero:
                 sensitive_itemsets.sort_values(by='n_modify', ascending=False, inplace=True)
+                set_zero = False
                 break
             elif sensitive_itemsets.iloc[0]["n_modify"] < 0:
                 raise Exception('n_modify < 0')
