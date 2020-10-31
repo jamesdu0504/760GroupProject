@@ -102,13 +102,13 @@ def sanitization_table(psudo_graph, sensitive_itemsets, d):
 
             sensitive_transactions=list(transactions_containing_itemset(psudo_graph, victim_itemset)) #this will change
 
+            set_zero=False
             while sensitive_itemsets.iloc[0]["n_modify"]>0 and sensitive_transactions: #we need to modify less than or equal to n_modify transactions
                 pair=(victim_item, sensitive_transactions.pop())
                 sanitization_tbl.append(pair)
                 transaction_items = items_in_transaction(psudo_graph, pair[1])
                 psudo_graph_delete_item_transaction_pair(psudo_graph, pair)
-                set_zero=False
-
+                
                 for itemset_set in sensitive_itemsets_with_victim_item.loc[(sensitive_itemsets_with_victim_item["itemset_set"] <= transaction_items)]['itemset_set']:
                     old_nmodify = sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] == itemset_set, 'n_modify'].item()
                     sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] == itemset_set, 'n_modify'] -= 1
