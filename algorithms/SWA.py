@@ -28,7 +28,7 @@ def SWA(database, sensitive_rules, window_size):
 
             #Sort the items of each transaction in ascending order so we can use binary search
             sensitive_rules_present = []
-            transaction = sorted(list(t["itemsets"]))
+            transaction = sorted(list(t["itemsets"])) #TODO: Don't think this even matters
             transaction_lengths[i] = len(transaction)
 
             #if it has all items of at least one restrictive rule
@@ -75,7 +75,7 @@ def SWA(database, sensitive_rules, window_size):
 
 # print(db)
 
-# sensitiveItemsets = {frozenset(["4"]): 0.3, frozenset(["1", "2"]): 0.3}
+# sensitiveItemsets = {frozenset(["4"]): 3/7, frozenset(["1", "2"]): 0.375}
 
 # db = SWA(db, sensitiveItemsets, 10)
 
