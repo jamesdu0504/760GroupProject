@@ -56,6 +56,16 @@ def transactions_containing_itemset(psudo_graph, itemset):
         
     return transactions_containing_itemset
 
+
+def items_in_transaction(psudo_graph, transaction):
+    items = set()
+    for k in psudo_graph.keys():
+        if transaction in psudo_graph[k]['prefix'].keys() or transaction in psudo_graph[k]['postfix'].keys():
+            items.add(k)
+
+    return items
+
+
 def support_count(psudo_graph, itemset):
     return len(transactions_containing_itemset(psudo_graph, itemset))
 
@@ -71,21 +81,20 @@ def sensitive_count_table(psudo_graph, sensitive_itemsets, d):
     sensitive_itemsets['n_modify'] = sensitive_itemsets.apply( lambda row: floor(support_count(psudo_graph, row.itemset) - (row.threshold *d)+1), axis=1)
     sensitive_itemsets.sort_values(by='n_modify', ascending=False, inplace=True)
 
-def sanitization_table(psudo_graph, sensitive_itemsets):
+def sanitization_table(psudo_graph, sensitive_itemsets, d):
     sanitization_tbl=[]
     sensitive_itemsets['itemset_set']=[set(itemset) for itemset in sensitive_itemsets['itemset']]
     while sensitive_itemsets.iloc[0]["n_modify"] !=0:
         itemset=sensitive_itemsets.iloc[0]["itemset"]
         victim_item=max([(item, support_count(psudo_graph,[item]), len(sensitive_itemsets.loc[(sensitive_itemsets['itemset_set'] >= set([item])) & (sensitive_itemsets['n_modify'] > 0)])) for item in itemset], key= lambda x: (x[2],x[1]))  #can change for faster implementation
         victim_item=victim_item[0]
+        victim_item_in_a_set = {victim_item}
         sensitive_itemsets_with_victim_item=sensitive_itemsets.loc[(sensitive_itemsets['itemset_set']>= set([victim_item])) & (sensitive_itemsets["n_modify"]>0)].copy()
         sensitive_itemsets_with_victim_item.sort_values(by='n_modify', ascending=False, inplace=True)
 
         # end_pointer points to effective end of sensitive_itemsets_With_victim_item DF
         end_pointer = 0
         while True:
-            if end_pointer > 20:
-                print(end_pointer)
             victim_itemset=set([i
                                 for itemset in sensitive_itemsets_with_victim_item['itemset'][:len(sensitive_itemsets_with_victim_item['itemset'])-end_pointer]
                                 for i in itemset])  #victim_itemset is the union of the sensitive itemset contianing the victim item
@@ -96,11 +105,14 @@ def sanitization_table(psudo_graph, sensitive_itemsets):
             while sensitive_itemsets.iloc[0]["n_modify"]>0 and sensitive_transactions: #we need to modify less than or equal to n_modify transactions
                 pair=(victim_item, sensitive_transactions.pop())
                 sanitization_tbl.append(pair)
+                transaction_items = items_in_transaction(psudo_graph, pair[1])
                 psudo_graph_delete_item_transaction_pair(psudo_graph, pair)
                 set_zero=False
-                for itemset_set in sensitive_itemsets_with_victim_item["itemset_set"][:len(sensitive_itemsets_with_victim_item['itemset'])-end_pointer]:
-                    sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] == itemset_set, 'n_modify']-=1
-                    if sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] == itemset_set, 'n_modify'].item() == 0:
+
+                for itemset_set in sensitive_itemsets_with_victim_item.loc[(sensitive_itemsets_with_victim_item["itemset_set"] <= transaction_items)]['itemset_set']:
+                    old_nmodify = sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] == itemset_set, 'n_modify'].item()
+                    sensitive_itemsets.loc[sensitive_itemsets['itemset_set'] == itemset_set, 'n_modify'] -= 1
+                    if old_nmodify == 1: # Then n_modify is now 0
                         set_zero = True
                 if set_zero:
                     break
@@ -125,7 +137,7 @@ def pgbs(database, sensitive_itemsets):
     pg = psudo_graph(transactions)
     sensitive_count_table(pg, sensitive_itemsets, d)
     #selecting items to delete
-    sanitization_tbl = sanitization_table(pg, sensitive_itemsets)
+    sanitization_tbl = sanitization_table(pg, sensitive_itemsets, d)
     #deleting items
     for item, transaction in sanitization_tbl:
         database.at[transaction, str(item)] = False
