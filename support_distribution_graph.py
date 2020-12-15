@@ -48,7 +48,7 @@ def dual_support_graph_distribution(frequent_itemsets_A, frequent_itemsets_B, mi
              histtype='bar', 
              cumulative=-1, 
              range=(max(min_support, 0), frequent_itemsets_B['support'].max()),
-             color="limegreen",
+             color="yellow",
              alpha=0.8,
              label="Sanitised")
 
