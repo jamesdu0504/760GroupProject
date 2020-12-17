@@ -30,14 +30,7 @@ from algorithms.pgbs import pgbs
 #             "T10I4D100K":[0.001, 0.0015, 0.002],
 #             "mushroom":[0.1, 0.2, 0.3]}
 
-datasets = {"BMS1":[0.00085, 0.001, 0.002],
-            "BMS2":[0.0005, 0.001, 0.0015],
-            "connect":[ 0.8, 0.85, 0.9],
-            "chess":[0.7, 0.75, 0.8],
-            "Belgian_retail":[0.0005, 0.001, 0.0015],
-            "T40I10D100K":[0.011, 0.015, 0.02],
-            "T10I4D100K":[0.001, 0.0015, 0.002],
-            "mushroom":[0.1, 0.2, 0.3]}
+datasets = {"Belgian_retail":[0.0005, 0.001, 0.0015]}
 
 def count_FI_containing_S(freqIS, sensIS):
     #Should find the number of frequent itemsets that contain a sensitive itemset
@@ -122,7 +115,7 @@ def main(datasets):
             #Find original frequent itemsets at frequency sigma min
             freq_original = freq_model.loc[freq_model["support"] >= sigma_min]
 
-            for k_freq in [10, 30]:
+            for k_freq in [10, 30, 50]:
                 print("-", dataset, ":", k_freq, "Sensitive itemsets")
 
                 #Copy the transactions so we can edit it directly

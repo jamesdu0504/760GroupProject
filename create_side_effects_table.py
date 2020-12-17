@@ -83,7 +83,7 @@ def get_top_k_sensitive_itemsets(freqIS, num_sensIS):
             break
     return sensitive_itemsets
 
-def main(datasets, algorithm):
+def main(datasets, algorithm, i):
     #Create the base of a table
     table_11 = pd.DataFrame(columns=['Model',
                                      'Support threshold',
@@ -211,7 +211,7 @@ def main(datasets, algorithm):
                 print(f'- RPS time: {end_time}')
 
                 #Plot support graphs
-                dual_support_graph_distribution(freq_model, sanitized_DB, sigma_model, dataset+"_"+str(sigma_min)+"_"+str(k_freq))
+                dual_support_graph_distribution(freq_model, sanitized_DB, sigma_model, dataset+"_"+str(i)+"_"+str(sigma_min)+"_"+str(k_freq))
 
                 #Find number of FI in sanitized database containing sensitive itemsets
                 num_FI_containing_S_RPS = count_FI_containing_S(freq_sanitized, sensitive_IS)
@@ -235,6 +235,8 @@ def main(datasets, algorithm):
 
                 #Update after each one just so we are sure we are recording results
                 table_11 = table_11.append(new_row, ignore_index=True)
-                table_11.to_csv('table_11.csv')
+                table_11.to_csv('table_11_'+str(i)+'.csv')
 
-main(datasets, "MRPS")
+
+for i in range(10):
+    main(datasets, "MRPS", i)
