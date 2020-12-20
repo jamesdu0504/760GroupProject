@@ -104,7 +104,7 @@ def main(datasets):
                                      'Number of FI before sanitization',
                                      'Information loss expected',
                                      'Number of FI after sanitization',
-                                     'Number of FI containing an element of S after RPS',
+                                     'Number of FI containing an element of S after SWA',
                                      'Hiding failure',
                                      'Artifactual patterns',
                                      'Misses cost',

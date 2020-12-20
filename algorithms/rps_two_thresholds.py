@@ -1,7 +1,6 @@
 from random import uniform, seed
 import pandas as pd
 
-seed(42)
 #from mlxtend.frequent_patterns import fpgrowth
 
 #import sys
