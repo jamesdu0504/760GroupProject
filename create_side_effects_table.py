@@ -17,7 +17,6 @@ from support_distribution_graph import dual_support_graph_distribution
 from charm_algorithm import get_closed_itemsets_Charm as get_closed_itemsets
 from arm_utilities import itemsets_from_closed_itemsets
 import datasets.import_datasets as im
-from statistical_measures import IL, IL_expected
 
 from algorithms.rps import rps
 from algorithms.rps_two_thresholds import rps_two_thresholds
